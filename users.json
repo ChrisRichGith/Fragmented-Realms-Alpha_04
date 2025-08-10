@@ -1,0 +1,52 @@
+{
+  "Clavayn": {
+    "username": "Clavayn",
+    "email": "christiandittrich74@googlemail.com",
+    "password": "$2b$10$iNPU5YqkJeIy5nh3wnTrK.ayhgQ0/MJkWX2EJBOF0BjcGX9RMD/vG",
+    "resources": {
+      "gold": 154,
+      "holz": 132,
+      "erz": 133,
+      "kristall": 133
+    },
+    "unlockedGames": [],
+    "lastLogin": "2025-08-10T18:34:30.767Z",
+    "createdAt": "2025-08-08T09:17:23.842Z",
+    "isOnline": true,
+    "isAdmin": true,
+    "isBanned": false,
+    "rpg": {
+      "level": 1,
+      "xp": 0,
+      "strength": 5,
+      "dexterity": 5,
+      "intelligence": 5
+    }
+  },
+  "Christian": {
+    "username": "Christian",
+    "email": "c_dittrich@gmx.de",
+    "password": "$2b$10$jv1/4CW4Rqn3WOBKUfCss.P0qSPEVk5CMo3q805wYqHgQ1Hl827/O",
+    "resources": {
+      "gold": 111,
+      "holz": 221,
+      "erz": 220,
+      "kristall": 171
+    },
+    "unlockedGames": [
+      "space-shooter"
+    ],
+    "lastLogin": "2025-08-10T18:41:55.341Z",
+    "createdAt": "2025-08-08T09:47:25.858Z",
+    "isOnline": true,
+    "isAdmin": false,
+    "isBanned": false,
+    "rpg": {
+      "level": 1,
+      "xp": 0,
+      "strength": 5,
+      "dexterity": 5,
+      "intelligence": 5
+    }
+  }
+}

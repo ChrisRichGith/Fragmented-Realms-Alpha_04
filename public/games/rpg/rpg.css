@@ -1,0 +1,29 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #1a1a2e;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+#rpg-world {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+#rpgCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#rpg-ui {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 5px;
+}

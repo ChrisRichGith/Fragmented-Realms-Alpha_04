@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fragmented Realms - Space Shooter</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Title Screen -->
+        <div id="title-screen">
+            <h1>SPACE SHOOTER</h1>
+            <div class="menu-buttons">
+                <button id="start-btn">Spiel starten</button>
+                <button id="highscores-btn">Highscores</button>
+                <button id="exit-btn">Zum Hauptmenü</button>
+            </div>
+        </div>
+
+        <!-- Highscores Screen -->
+        <div id="highscores-screen" style="display: none;">
+            <h2>HIGHSCORES</h2>
+            <div class="highscores-container">
+                <div class="highscore-list">
+                    <h3>Deine Besten</h3>
+                    <ol id="personal-highscores"></ol>
+                </div>
+                <div class="highscore-list">
+                    <h3>Weltbestenliste</h3>
+                    <ol id="global-highscores"></ol>
+                </div>
+            </div>
+            <button id="back-btn">Zurück</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" style="display: none;">
+            <canvas id="gameCanvas"></canvas>
+            <div id="ui">
+                <div id="score">Punkte: 0</div>
+                <div id="lives">Leben: 10</div>
+                <div id="boss-timer">Nächster Boss in: 30s</div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over" style="display: none;">
+            <h2>SPIEL VORBEI</h2>
+            <p>Dein Score: <span id="final-score">0</span></p>
+            <div id="new-highscore" style="display: none;">
+                <p>Neuer Highscore!</p>
+                <input type="text" id="player-name" maxlength="20" placeholder="Dein Name">
+            </div>
+            <div class="menu-buttons">
+                <button id="restart-btn">Nochmal spielen</button>
+                <button id="to-highscores-btn">Highscores anzeigen</button>
+                <button id="exit-to-menu-btn">Zum Hauptmenü</button>
+            </div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

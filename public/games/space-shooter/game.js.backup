@@ -1,0 +1,939 @@
+// Game configuration
+const config = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    playerSpeed: 5,
+    bulletSpeed: 7,
+    enemySpeed: 2,
+    bossSpeed: 1.5,
+    bossHealth: 10,
+    playerHealth: 10,
+    spawnRate: 1000,
+    bossInterval: 30000,
+    playerWidth: 50,
+    playerHeight: 50,
+    enemyBulletSpeed: 3,
+    bossBulletSpeed: 4
+};
+
+// Game objects
+let player, bullets = [], enemies = [], enemyBullets = [];
+let explosions = [];
+let canvas, ctx, gameLoop, keys = {};
+let bossSpawnTimer = config.bossInterval;
+let playerImage = new Image();
+let explosionImage = new Image();
+
+// Power-up system
+let powerUps = [];
+let activePowerUps = {
+    doubleShot: false,
+    rapidFire: false,
+    screenBomb: false,
+    extraLives: 0,
+    homingRocket: false,
+    spreadShot: false
+};
+
+let powerUpTimers = {
+    doubleShot: 0,
+    rapidFire: 0,
+    screenBomb: 0,
+    homingRocket: 0,
+    spreadShot: 0
+};
+
+// UI Elements
+const ui = {
+    // Screens
+    titleScreen: document.getElementById('title-screen'),
+    gameScreen: document.getElementById('game-screen'),
+    highscoresScreen: document.getElementById('highscores-screen'),
+    gameOverScreen: document.getElementById('game-over'),
+    
+    // Buttons
+    startBtn: document.getElementById('start-btn'),
+    highscoresBtn: document.getElementById('highscores-btn'),
+    backBtn: document.getElementById('back-btn'),
+    restartBtn: document.getElementById('restart-btn'),
+    toHighscoresBtn: document.getElementById('to-highscores-btn'),
+    exitBtn: document.getElementById('exit-btn'),
+    exitToMenuBtn: document.getElementById('exit-to-menu-btn'),
+    
+    // Game UI
+    scoreEl: document.getElementById('score'),
+    livesEl: document.getElementById('lives'),
+    bossTimerEl: document.getElementById('boss-timer'),
+    finalScoreEl: document.getElementById('final-score'),
+    newHighscoreEl: document.getElementById('new-highscore'),
+    playerNameInput: document.getElementById('player-name'),
+    personalHighscoresEl: document.getElementById('personal-highscores'),
+    globalHighscoresEl: document.getElementById('global-highscores')
+};
+
+// Game state
+let gameState = {
+    score: 0,
+    lives: config.playerHealth,
+    isGameOver: false,
+    bossActive: false,
+    bossSpawnTime: 0,
+    lastEnemySpawn: 0,
+    playerName: 'Player',
+    bossDirection: 1 // 1 for right, -1 for left
+};
+
+// Initialize game
+function init() {
+    // Set up canvas
+    canvas = document.getElementById('gameCanvas');
+    ctx = canvas.getContext('2d');
+    
+    // Set canvas size
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    // Load images
+    playerImage.src = 'player.svg';
+    explosionImage.src = 'explosion.svg';
+    
+    // Add error handling for images
+    playerImage.onerror = () => {
+        console.log('Player image failed to load, using fallback');
+    };
+    explosionImage.onerror = () => {
+        console.log('Explosion image failed to load, using fallback');
+    };
+    
+    // Set up event listeners
+    setupEventListeners();
+    
+    // Show title screen
+    showScreen('title');
+    
+    // Start game loop (paused until game starts)
+    gameLoop = requestAnimationFrame(update);
+}
+
+// Set up all event listeners
+function setupEventListeners() {
+    // Game controls
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    
+    // UI Buttons
+    ui.startBtn.addEventListener('click', () => showScreen('game'));
+    ui.highscoresBtn.addEventListener('click', () => showScreen('highscores'));
+    ui.backBtn.addEventListener('click', () => showScreen('title'));
+    ui.exitBtn.addEventListener('click', () => window.close());
+    ui.exitToMenuBtn.addEventListener('click', () => window.close());
+    
+    ui.restartBtn.addEventListener('click', () => {
+        if (ui.newHighscoreEl.style.display === 'block') {
+            const name = ui.playerNameInput.value.trim() || 'Player';
+            submitHighscore(name, gameState.score).then(() => {
+                resetGame();
+                showScreen('game');
+            });
+        } else {
+            resetGame();
+            showScreen('game');
+        }
+    });
+    
+    ui.toHighscoresBtn.addEventListener('click', () => {
+        if (ui.newHighscoreEl.style.display === 'block') {
+            const name = ui.playerNameInput.value.trim() || 'Player';
+            submitHighscore(name, gameState.score).then(() => {
+                showScreen('highscores');
+            });
+        } else {
+            showScreen('highscores');
+        }
+    });
+}
+
+// Show a specific screen
+function showScreen(screenId) {
+    // Hide all screens
+    ui.titleScreen.style.display = 'none';
+    ui.gameScreen.style.display = 'none';
+    ui.highscoresScreen.style.display = 'none';
+    ui.gameOverScreen.style.display = 'none';
+    
+    // Show the requested screen
+    switch(screenId) {
+        case 'title':
+            ui.titleScreen.style.display = 'block';
+            break;
+        case 'game':
+            ui.gameScreen.style.display = 'block';
+            resetGame();
+            break;
+        case 'highscores':
+            ui.highscoresScreen.style.display = 'block';
+            loadHighscores();
+            break;
+        case 'gameOver':
+            ui.gameOverScreen.style.display = 'block';
+            ui.finalScoreEl.textContent = gameState.score;
+            checkHighscore();
+            break;
+    }
+}
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+// Game loop
+function update(timestamp) {
+    if (gameState.isGameOver) return;
+    
+    // Only update game logic if we're in the game screen
+    if (ui.gameScreen.style.display === 'block') {
+        updatePlayer();
+        updateBullets();
+        updateEnemyBullets();
+        updateEnemies();
+        updateBossTimer();
+        updatePowerUps();
+        updateFloatingScores();
+        checkCollisions();
+        updatePowerUpTimers();
+    }
+    
+    draw();
+    
+    gameLoop = requestAnimationFrame(update);
+}
+
+function createExplosion(x, y, size) {
+    explosions.push({
+        x: x - size/2,
+        y: y - size/2,
+        size: size,
+        frame: 0,
+        maxFrames: 10
+    });
+}
+
+function draw() {
+    // Clear canvas
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw explosions
+    for (let i = explosions.length - 1; i >= 0; i--) {
+        const exp = explosions[i];
+        if (explosionImage.complete) {
+            ctx.globalAlpha = 1 - (exp.frame / exp.maxFrames);
+            ctx.drawImage(explosionImage, exp.x, exp.y, exp.size, exp.size);
+            ctx.globalAlpha = 1.0;
+        } else {
+            // Fallback circle explosion
+            const radius = (exp.size / 2) * (1 + exp.frame/5);
+            const gradient = ctx.createRadialGradient(
+                exp.x + exp.size/2, exp.y + exp.size/2, 0,
+                exp.x + exp.size/2, exp.y + exp.size/2, radius
+            );
+            gradient.addColorStop(0, '#f1c40f');
+            gradient.addColorStop(0.5, '#e67e22');
+            gradient.addColorStop(1, 'transparent');
+            
+            ctx.fillStyle = gradient;
+            ctx.globalAlpha = 1 - (exp.frame / exp.maxFrames);
+            ctx.beginPath();
+            ctx.arc(exp.x + exp.size/2, exp.y + exp.size/2, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        }
+        
+        exp.frame++;
+        if (exp.frame > exp.maxFrames) {
+            explosions.splice(i, 1);
+        }
+    }
+    
+    // Draw player
+    if (player) {
+        if (playerImage.complete) {
+            ctx.drawImage(playerImage, player.x, player.y, player.width, player.height);
+        } else {
+            // Fallback rectangle if image doesn't load
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+    }
+    
+    // Draw floating scores
+    drawFloatingScores();
+    
+    // Draw bullets with glow effect
+    bullets.forEach(bullet => {
+        // Bullet glow
+        const gradient = ctx.createRadialGradient(
+            bullet.x + bullet.width/2, 
+            bullet.y + bullet.height/2, 
+            0,
+            bullet.x + bullet.width/2, 
+            bullet.y + bullet.height/2, 
+            Math.max(bullet.width, bullet.height) * 1.5
+        );
+        
+        if (bullet.isEnemy) {
+            gradient.addColorStop(0, 'rgba(255, 100, 100, 0.8)');
+            gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+        } else {
+            gradient.addColorStop(0, 'rgba(255, 255, 100, 0.8)');
+            gradient.addColorStop(1, 'rgba(255, 200, 0, 0)');
+        }
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(
+            bullet.x - bullet.width/2, 
+            bullet.y - bullet.height/2, 
+            bullet.width * 2, 
+            bullet.height * 2
+        );
+        
+        // Bullet core
+        ctx.fillStyle = bullet.isEnemy ? '#ff5555' : '#ffff00';
+        ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+    });
+    
+    // Draw enemy bullets
+    enemyBullets.forEach(bullet => {
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+    });
+    
+    // Draw enemies
+    enemies.forEach(enemy => {
+        ctx.fillStyle = enemy.isBoss ? '#8e44ad' : '#f00';
+        ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+        
+        // Draw boss health
+        if (enemy.isBoss) {
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(enemy.x, enemy.y - 15, enemy.width, 5);
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(enemy.x, enemy.y - 15, (enemy.width * enemy.health) / config.bossHealth, 5);
+        }
+    });
+    
+    // Draw power-ups
+    powerUps.forEach(powerUp => {
+        const colors = {
+            doubleShot: '#ff00ff',
+            rapidFire: '#00ffff',
+            screenBomb: '#ff8800',
+            extraLives: '#00ff00',
+            homingRocket: '#ff0080',
+            spreadShot: '#ffff00'
+        };
+        
+        ctx.fillStyle = colors[powerUp.type];
+        ctx.fillRect(powerUp.x, powerUp.y, powerUp.width, powerUp.height);
+        
+        // Add pulsing effect
+        ctx.strokeStyle = colors[powerUp.type];
+        ctx.lineWidth = 2;
+        ctx.strokeRect(powerUp.x - 2, powerUp.y - 2, powerUp.width + 4, powerUp.height + 4);
+    });
+    
+    // Update UI
+    document.getElementById('score').textContent = `Punkte: ${gameState.score}`;
+    document.getElementById('lives').textContent = `Leben: ${gameState.lives}`;
+    document.getElementById('boss-timer').textContent = 
+        `Nächster Boss in: ${Math.ceil(bossSpawnTimer / 1000)}s`;
+    
+    // Game over screen
+    if (gameState.isGameOver) {
+        document.getElementById('game-over').style.display = 'block';
+        document.getElementById('final-score').textContent = gameState.score;
+        cancelAnimationFrame(gameLoop);
+    }
+}
+
+function updatePlayer() {
+    if (!player) return;
+    
+    if (keys['ArrowLeft'] && player.x > 0) player.x -= config.playerSpeed;
+    if (keys['ArrowRight'] && player.x + player.width < canvas.width) player.x += config.playerSpeed;
+    if (keys['ArrowUp'] && player.y > 0) player.y -= config.playerSpeed;
+    if (keys['ArrowDown'] && player.y + player.height < canvas.height) player.y += config.playerSpeed;
+    
+    // Shooting
+    const shootDelay = activePowerUps.rapidFire ? 100 : 250;
+    if (keys[' '] && Date.now() - (player.lastShot || 0) > shootDelay) {
+        shoot();
+        player.lastShot = Date.now();
+    }
+    
+    // Screen bomb
+    if (keys['b'] || keys['B']) {
+        activateScreenBomb();
+    }
+}
+
+function shoot() {
+    if (!player) return;
+    
+    if (activePowerUps.doubleShot) {
+        // Double shot
+        bullets.push({
+            x: player.x + 5,
+            y: player.y,
+            width: 5,
+            height: 15,
+            speed: config.bulletSpeed
+        });
+        bullets.push({
+            x: player.x + player.width - 10,
+            y: player.y,
+            width: 5,
+            height: 15,
+            speed: config.bulletSpeed
+        });
+    } else if (activePowerUps.spreadShot) {
+        // Spread shot
+        bullets.push({
+            x: player.x + player.width / 2 - 2.5,
+            y: player.y,
+            width: 5,
+            height: 15,
+            speed: config.bulletSpeed
+        });
+        bullets.push({
+            x: player.x + player.width / 2 - 2.5,
+            y: player.y,
+            width: 5,
+            height: 15,
+            speed: config.bulletSpeed,
+            angle: -0.3
+        });
+        bullets.push({
+            x: player.x + player.width / 2 - 2.5,
+            y: player.y,
+            width: 5,
+            height: 15,
+            speed: config.bulletSpeed,
+            angle: 0.3
+        });
+    } else {
+        // Normal shot
+        bullets.push({
+            x: player.x + player.width / 2 - 2.5,
+            y: player.y,
+            width: 5,
+            height: 15,
+            speed: config.bulletSpeed
+        });
+    }
+}
+
+function updateBullets() {
+    for (let i = bullets.length - 1; i >= 0; i--) {
+        const bullet = bullets[i];
+        
+        if (bullet.angle) {
+            // Spread shot bullets
+            bullet.x += Math.sin(bullet.angle) * bullet.speed;
+            bullet.y -= Math.cos(bullet.angle) * bullet.speed;
+        } else {
+            bullet.y -= bullet.speed;
+        }
+        
+        if (bullet.y < -bullet.height) bullets.splice(i, 1);
+    }
+}
+
+function updateEnemyBullets() {
+    for (let i = enemyBullets.length - 1; i >= 0; i--) {
+        const bullet = enemyBullets[i];
+        bullet.y += bullet.speed;
+        
+        if (bullet.y > canvas.height) {
+            enemyBullets.splice(i, 1);
+        }
+    }
+}
+
+function spawnEnemy(isBoss = false) {
+    const size = isBoss ? 60 : 30;
+    const enemy = {
+        x: Math.random() * (canvas.width - size),
+        y: isBoss ? 50 : -size,
+        width: size,
+        height: size,
+        speed: isBoss ? config.bossSpeed : config.enemySpeed,
+        isBoss: isBoss,
+        health: isBoss ? config.bossHealth : 1,
+        lastShot: 0,
+        shootDelay: isBoss ? 1000 : 2000
+    };
+    
+    enemies.push(enemy);
+    
+    if (isBoss) {
+        gameState.bossActive = true;
+        gameState.bossSpawnTime = Date.now();
+    }
+}
+
+function updateEnemies() {
+    const now = Date.now();
+    if (now - gameState.lastEnemySpawn > config.spawnRate && !gameState.bossActive) {
+        spawnEnemy();
+        gameState.lastEnemySpawn = now;
+    }
+    
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemy = enemies[i];
+        
+        if (enemy.isBoss) {
+            // Boss moves horizontally at the top
+            enemy.x += enemy.speed * gameState.bossDirection;
+            
+            if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
+                gameState.bossDirection *= -1;
+            }
+            
+            // Boss shoots more frequently
+            if (now - enemy.lastShot > enemy.shootDelay) {
+                enemyShoot(enemy);
+                enemy.lastShot = now;
+            }
+        } else {
+            // Normal enemies move down
+            enemy.y += enemy.speed;
+            
+            // Normal enemies shoot occasionally
+            if (now - enemy.lastShot > enemy.shootDelay) {
+                enemyShoot(enemy);
+                enemy.lastShot = now;
+            }
+            
+            if (enemy.y > canvas.height) {
+                enemies.splice(i, 1);
+            }
+        }
+    }
+}
+
+function enemyShoot(enemy) {
+    enemyBullets.push({
+        x: enemy.x + enemy.width / 2 - 2.5,
+        y: enemy.y + enemy.height,
+        width: 5,
+        height: 10,
+        speed: enemy.isBoss ? config.bossBulletSpeed : config.enemyBulletSpeed
+    });
+}
+
+function updateBossTimer() {
+    if (!gameState.bossActive) {
+        bossSpawnTimer -= 16; // ~60fps
+        if (bossSpawnTimer <= 0) {
+            spawnEnemy(true);
+            bossSpawnTimer = config.bossInterval;
+        }
+    }
+}
+
+function checkCollisions() {
+    // Bullet-enemy collisions
+    for (let i = bullets.length - 1; i >= 0; i--) {
+        const bullet = bullets[i];
+        
+        for (let j = enemies.length - 1; j >= 0; j--) {
+            const enemy = enemies[j];
+            
+            if (isColliding(bullet, enemy)) {
+                bullets.splice(i, 1);
+                enemy.health--;
+                
+                if (enemy.health <= 0) {
+                    // Create explosion effect
+                    createExplosion(
+                        enemy.x + enemy.width/2, 
+                        enemy.y + enemy.height/2,
+                        Math.max(enemy.width, enemy.height) * 1.5
+                    );
+                
+                    // Add score and remove enemy
+                    gameState.score += enemy.isBoss ? 100 : 10;
+                    enemies.splice(j, 1);
+                    
+                    // Boss drops power-up
+                    if (enemy.isBoss) {
+                        dropPowerUp(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+                        gameState.bossActive = false;
+                        bossSpawnTimer = config.bossInterval;
+                    }
+                    
+                    // Create floating score
+                    createFloatingScore(
+                        enemy.x + enemy.width/2,
+                        enemy.y + enemy.height/2,
+                        enemy.isBoss ? 100 : 10
+                    );
+                    
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Enemy bullet-player collisions
+    for (let i = enemyBullets.length - 1; i >= 0; i--) {
+        const bullet = enemyBullets[i];
+        
+        if (player && isColliding(bullet, player)) {
+            enemyBullets.splice(i, 1);
+            takeDamage();
+        }
+    }
+    
+    // Enemy-player collisions
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemy = enemies[i];
+        
+        if (player && isColliding(enemy, player)) {
+            enemies.splice(i, 1);
+            takeDamage();
+        }
+    }
+    
+    // Power-up collisions
+    for (let i = powerUps.length - 1; i >= 0; i--) {
+        const powerUp = powerUps[i];
+        
+        if (player && isColliding(powerUp, player)) {
+            activatePowerUp(powerUp.type);
+            powerUps.splice(i, 1);
+        }
+    }
+}
+
+function isColliding(obj1, obj2) {
+    if (!obj1 || !obj2) return false;
+    return obj1.x < obj2.x + obj2.width &&
+           obj1.x + obj1.width > obj2.x &&
+           obj1.y < obj2.y + obj2.height &&
+           obj1.y + obj1.height > obj2.y;
+}
+
+// Floating score effect
+let floatingScores = [];
+
+function createFloatingScore(x, y, score) {
+    floatingScores.push({
+        x: x,
+        y: y,
+        value: score,
+        alpha: 1.0,
+        ySpeed: -1
+    });
+}
+
+function updateFloatingScores() {
+    for (let i = floatingScores.length - 1; i >= 0; i--) {
+        const score = floatingScores[i];
+        score.y += score.ySpeed;
+        score.alpha -= 0.02;
+        
+        if (score.alpha <= 0) {
+            floatingScores.splice(i, 1);
+        }
+    }
+}
+
+function drawFloatingScores() {
+    ctx.save();
+    ctx.font = 'bold 20px Arial';
+    ctx.textAlign = 'center';
+    
+    floatingScores.forEach(score => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${score.alpha})`;
+        ctx.strokeStyle = `rgba(0, 0, 0, ${score.alpha * 0.7})`;
+        ctx.lineWidth = 2;
+        
+        // Draw text with outline
+        ctx.strokeText('+' + score.value, score.x, score.y);
+        ctx.fillText('+' + score.value, score.x, score.y);
+    });
+    
+    ctx.restore();
+}
+
+function takeDamage() {
+    gameState.lives--;
+    
+    // Create explosion effect on player
+    createExplosion(
+        player.x + player.width/2, 
+        player.y + player.height/2,
+        Math.max(player.width, player.height) * 1.5
+    );
+    
+    if (gameState.lives <= 0) {
+        gameOver();
+    }
+}
+
+function gameOver() {
+    gameState.isGameOver = true;
+    showScreen('gameOver');
+}
+
+function resetGame() {
+    gameState = {
+        score: 0,
+        lives: config.playerHealth,
+        isGameOver: false,
+        bossActive: false,
+        bossSpawnTime: 0,
+        lastEnemySpawn: 0,
+        bossDirection: 1
+    };
+    
+    // Initialize player if not exists
+    if (!player) {
+        player = {
+            x: config.width / 2 - config.playerWidth / 2,
+            y: config.height - 100,
+            width: config.playerWidth,
+            height: config.playerHeight,
+            isAlive: true
+        };
+    } else {
+        player.x = config.width / 2 - config.playerWidth / 2;
+        player.y = config.height - 100;
+        player.isAlive = true;
+    }
+    
+    bullets = [];
+    enemies = [];
+    enemyBullets = [];
+    powerUps = [];
+    bossSpawnTimer = config.bossInterval;
+    
+    // Reset power-ups
+    activePowerUps = {
+        doubleShot: false,
+        rapidFire: false,
+        screenBomb: false,
+        extraLives: 0,
+        homingRocket: false,
+        spreadShot: false
+    };
+    
+    powerUpTimers = {
+        doubleShot: 0,
+        rapidFire: 0,
+        screenBomb: 0,
+        homingRocket: 0,
+        spreadShot: 0
+    };
+    
+    document.getElementById('game-over').style.display = 'none';
+    
+    if (gameLoop) {
+        cancelAnimationFrame(gameLoop);
+    }
+    gameLoop = requestAnimationFrame(update);
+}
+
+function handleKeyDown(e) {
+    keys[e.key] = true;
+    if (e.key === 'Escape') {
+        if (ui.gameScreen.style.display === 'block') {
+            showScreen('title');
+        } else if (ui.highscoresScreen.style.display === 'block') {
+            showScreen('title');
+        } else {
+            window.close();
+        }
+    }
+}
+
+function handleKeyUp(e) {
+    keys[e.key] = false;
+}
+
+// Power-up system
+function dropPowerUp(x, y) {
+    const powerUpTypes = ['doubleShot', 'rapidFire', 'screenBomb', 'extraLives', 'homingRocket', 'spreadShot'];
+    const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+    
+    powerUps.push({
+        x: x - 15,
+        y: y,
+        width: 30,
+        height: 30,
+        type: randomType
+    });
+}
+
+function activatePowerUp(type) {
+    switch(type) {
+        case 'doubleShot':
+            activePowerUps.doubleShot = true;
+            powerUpTimers.doubleShot = Date.now() + 10000; // 10 seconds
+            break;
+        case 'rapidFire':
+            activePowerUps.rapidFire = true;
+            powerUpTimers.rapidFire = Date.now() + 8000; // 8 seconds
+            break;
+        case 'screenBomb':
+            activePowerUps.screenBomb = true;
+            powerUpTimers.screenBomb = Date.now() + 5000; // 5 seconds
+            break;
+        case 'extraLives':
+            gameState.lives += 5;
+            break;
+        case 'homingRocket':
+            activePowerUps.homingRocket = true;
+            powerUpTimers.homingRocket = Date.now() + 12000; // 12 seconds
+            break;
+        case 'spreadShot':
+            activePowerUps.spreadShot = true;
+            powerUpTimers.spreadShot = Date.now() + 15000; // 15 seconds
+            break;
+    }
+}
+
+function activateScreenBomb() {
+    if (!activePowerUps.screenBomb) return;
+    
+    // Destroy all enemies and bullets
+    enemies.forEach(enemy => {
+        createExplosion(
+            enemy.x + enemy.width/2,
+            enemy.y + enemy.height/2,
+            Math.max(enemy.width, enemy.height) * 1.5
+        );
+        gameState.score += enemy.isBoss ? 100 : 10;
+    });
+    
+    enemies = [];
+    enemyBullets = [];
+    activePowerUps.screenBomb = false;
+}
+
+function updatePowerUps() {
+    // Move power-ups down
+    for (let i = powerUps.length - 1; i >= 0; i--) {
+        const powerUp = powerUps[i];
+        powerUp.y += 2;
+        
+        if (powerUp.y > canvas.height) {
+            powerUps.splice(i, 1);
+        }
+    }
+}
+
+function updatePowerUpTimers() {
+    const now = Date.now();
+    
+    if (powerUpTimers.doubleShot && now > powerUpTimers.doubleShot) {
+        activePowerUps.doubleShot = false;
+        powerUpTimers.doubleShot = 0;
+    }
+    
+    if (powerUpTimers.rapidFire && now > powerUpTimers.rapidFire) {
+        activePowerUps.rapidFire = false;
+        powerUpTimers.rapidFire = 0;
+    }
+    
+    if (powerUpTimers.screenBomb && now > powerUpTimers.screenBomb) {
+        activePowerUps.screenBomb = false;
+        powerUpTimers.screenBomb = 0;
+    }
+    
+    if (powerUpTimers.homingRocket && now > powerUpTimers.homingRocket) {
+        activePowerUps.homingRocket = false;
+        powerUpTimers.homingRocket = 0;
+    }
+    
+    if (powerUpTimers.spreadShot && now > powerUpTimers.spreadShot) {
+        activePowerUps.spreadShot = false;
+        powerUpTimers.spreadShot = 0;
+    }
+}
+
+// Start the game
+window.onload = init;
+
+// Highscore functions
+function loadHighscores() {
+    // Load personal highscores from localStorage
+    const personalHighscores = JSON.parse(localStorage.getItem('spaceShooterPersonalHighscores') || '[]');
+    displayHighscores(personalHighscores, ui.personalHighscoresEl);
+    
+    // Load global highscores from server (placeholder for now)
+    const globalHighscores = JSON.parse(localStorage.getItem('spaceShooterGlobalHighscores') || '[]');
+    displayHighscores(globalHighscores, ui.globalHighscoresEl);
+}
+
+function displayHighscores(highscores, element) {
+    element.innerHTML = '';
+    
+    if (highscores.length === 0) {
+        element.innerHTML = '<li>Keine Highscores verfügbar</li>';
+        return;
+    }
+    
+    // Sort by score (highest first) and take top 10
+    const topScores = highscores
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10);
+    
+    topScores.forEach((entry, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <span>${index + 1}. ${entry.name}</span>
+            <span>${entry.score}</span>
+        `;
+        element.appendChild(li);
+    });
+}
+
+function checkHighscore() {
+    const personalHighscores = JSON.parse(localStorage.getItem('spaceShooterPersonalHighscores') || '[]');
+    const isNewPersonalHighscore = personalHighscores.length < 10 || gameState.score > Math.min(...personalHighscores.map(h => h.score));
+    
+    if (isNewPersonalHighscore) {
+        ui.newHighscoreEl.style.display = 'block';
+        ui.playerNameInput.focus();
+    } else {
+        ui.newHighscoreEl.style.display = 'none';
+    }
+}
+
+async function submitHighscore(name, score) {
+    // Add to personal highscores
+    const personalHighscores = JSON.parse(localStorage.getItem('spaceShooterPersonalHighscores') || '[]');
+    personalHighscores.push({ name, score, date: new Date().toISOString() });
+    
+    // Keep only top 10
+    personalHighscores.sort((a, b) => b.score - a.score);
+    const top10 = personalHighscores.slice(0, 10);
+    
+    localStorage.setItem('spaceShooterPersonalHighscores', JSON.stringify(top10));
+    
+    // TODO: Submit to server for global highscores
+    // For now, we'll use localStorage for global highscores too
+    const globalHighscores = JSON.parse(localStorage.getItem('spaceShooterGlobalHighscores') || '[]');
+    globalHighscores.push({ name, score, date: new Date().toISOString() });
+    
+    globalHighscores.sort((a, b) => b.score - a.score);
+    const top10Global = globalHighscores.slice(0, 10);
+    
+    localStorage.setItem('spaceShooterGlobalHighscores', JSON.stringify(top10Global));
+    
+    return Promise.resolve();
+}

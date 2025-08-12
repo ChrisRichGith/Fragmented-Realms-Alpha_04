@@ -11,33 +11,7 @@ let player, enemies = [];
 let canvas, ctx, gameLoop, keys = {};
 
 // UI Elements
-const ui = {
-    // Screens
-    titleScreen: document.getElementById('title-screen'),
-    gameScreen: document.getElementById('game-screen'),
-    highscoresScreen: document.getElementById('highscores-screen'),
-    gameOverScreen: document.getElementById('game-over'),
-    
-    // Buttons
-    startBtn: document.getElementById('start-btn'),
-    highscoresBtn: document.getElementById('highscores-btn'),
-    backBtn: document.getElementById('back-btn'),
-    restartBtn: document.getElementById('restart-btn'),
-    toHighscoresBtn: document.getElementById('to-highscores-btn'),
-    exitBtn: document.getElementById('exit-btn'),
-    exitToMenuBtn: document.getElementById('exit-to-menu-btn'),
-    
-    // Game UI
-    levelEl: document.getElementById('level'),
-    experienceEl: document.getElementById('experience'),
-    healthEl: document.getElementById('health'),
-    finalLevelEl: document.getElementById('final-level'),
-    finalExpEl: document.getElementById('final-exp'),
-    newHighscoreEl: document.getElementById('new-highscore'),
-    playerNameInput: document.getElementById('player-name'),
-    personalHighscoresEl: document.getElementById('personal-highscores'),
-    globalHighscoresEl: document.getElementById('global-highscores')
-};
+let ui = {};
 
 // Game state
 let gameState = {
@@ -55,6 +29,35 @@ function init() {
     // Set up canvas
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
+
+    // Populate UI object
+    ui = {
+        // Screens
+        titleScreen: document.getElementById('title-screen'),
+        gameScreen: document.getElementById('game-screen'),
+        optionsScreen: document.getElementById('options-screen'),
+        characterCreationScreen: document.getElementById('character-creation-screen'),
+
+        // Buttons
+        newGameBtn: document.getElementById('new-game-btn'),
+        loadGameBtn: document.getElementById('load-game-btn'),
+        optionsBtn: document.getElementById('options-btn'),
+        exitBtn: document.getElementById('exit-rpg-btn'),
+        optionsBackBtn: document.getElementById('options-back-btn'),
+        creationBackBtn: document.getElementById('creation-back-btn'),
+        startGameBtn: document.getElementById('start-game-btn'),
+
+        // Game UI
+        levelEl: document.getElementById('level'),
+        experienceEl: document.getElementById('experience'),
+        healthEl: document.getElementById('health'),
+
+    // Audio
+    bgMusic: document.getElementById('bg-music'),
+    sfxClick: document.getElementById('sfx-click'),
+    musicVolumeSlider: document.getElementById('music-volume'),
+    sfxVolumeSlider: document.getElementById('sfx-volume'),
+    };
     
     // Set canvas size
     resizeCanvas();
@@ -65,9 +68,26 @@ function init() {
     
     // Show title screen
     showScreen('title');
+
+    // Populate character creation screen
+    populateCharacterCreation();
     
     // Start game loop (paused until game starts)
     gameLoop = requestAnimationFrame(update);
+}
+
+// Audio control functions
+function playClickSound() {
+    if (ui.sfxClick) {
+        ui.sfxClick.currentTime = 0;
+        ui.sfxClick.play();
+    }
+}
+
+function playBgMusic() {
+    if (ui.bgMusic) {
+        ui.bgMusic.play().catch(e => console.error("Audio autoplay failed: ", e));
+    }
 }
 
 // Set up all event listeners
@@ -77,66 +97,95 @@ function setupEventListeners() {
     document.addEventListener('keyup', handleKeyUp);
     
     // UI Buttons
-    ui.startBtn.addEventListener('click', () => showScreen('game'));
-    ui.highscoresBtn.addEventListener('click', () => showScreen('highscores'));
-    ui.backBtn.addEventListener('click', () => showScreen('title'));
-    ui.exitBtn.addEventListener('click', () => window.close());
-    ui.exitToMenuBtn.addEventListener('click', () => window.close());
-    
-    ui.restartBtn.addEventListener('click', () => {
-        if (ui.newHighscoreEl.style.display === 'block') {
-            const name = ui.playerNameInput.value.trim() || 'Player';
-            submitHighscore(name, gameState.level, gameState.experience).then(() => {
-                resetGame();
-                showScreen('game');
-            });
-        } else {
-            resetGame();
-            showScreen('game');
-        }
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(button => {
+        button.addEventListener('click', playClickSound);
     });
-    
-    ui.toHighscoresBtn.addEventListener('click', () => {
-        if (ui.newHighscoreEl.style.display === 'block') {
-            const name = ui.playerNameInput.value.trim() || 'Player';
-            submitHighscore(name, gameState.level, gameState.experience).then(() => {
-                showScreen('highscores');
-            });
-        } else {
-            showScreen('highscores');
-        }
+
+    ui.newGameBtn.addEventListener('click', () => showScreen('character-creation'));
+    ui.loadGameBtn.addEventListener('click', () => {
+        console.log('Load Game clicked - functionality to be implemented.');
+        alert('Laden-Funktion noch nicht implementiert.');
+    });
+    ui.optionsBtn.addEventListener('click', () => {
+        console.log("Options button clicked!");
+        showScreen('options');
+    });
+    ui.optionsBackBtn.addEventListener('click', () => showScreen('title'));
+    ui.creationBackBtn.addEventListener('click', () => showScreen('title'));
+    ui.startGameBtn.addEventListener('click', () => showScreen('game'));
+    ui.exitBtn.addEventListener('click', () => {
+        window.close();
+    });
+
+    // Volume Sliders
+    ui.musicVolumeSlider.addEventListener('input', (e) => {
+        if(ui.bgMusic) ui.bgMusic.volume = e.target.value / 100;
+    });
+    ui.sfxVolumeSlider.addEventListener('input', (e) => {
+        if(ui.sfxClick) ui.sfxClick.volume = e.target.value / 100;
     });
 }
 
 // Show a specific screen
 function showScreen(screenId) {
+    console.log(`showScreen called with: ${screenId}`);
     // Hide all screens
-    Object.values(ui).forEach(element => {
-        if (element && element.style) {
-            element.style.display = 'none';
-        }
-    });
+    if (ui.titleScreen) ui.titleScreen.style.display = 'none';
+    if (ui.gameScreen) ui.gameScreen.style.display = 'none';
+    if (ui.optionsScreen) ui.optionsScreen.style.display = 'none';
+    if (ui.characterCreationScreen) ui.characterCreationScreen.style.display = 'none';
     
     // Show the requested screen
     switch(screenId) {
         case 'title':
-            ui.titleScreen.style.display = 'block';
+            if (ui.titleScreen) ui.titleScreen.style.display = 'flex'; // Use flex to center content
+            playBgMusic();
+            break;
+        case 'options':
+            if (ui.optionsScreen) ui.optionsScreen.style.display = 'flex'; // Use flex to center content
+            break;
+        case 'character-creation':
+            if (ui.characterCreationScreen) ui.characterCreationScreen.style.display = 'flex';
             break;
         case 'game':
-            ui.gameScreen.style.display = 'block';
+            if (ui.gameScreen) ui.gameScreen.style.display = 'block';
             resetGame();
             break;
-        case 'highscores':
-            ui.highscoresScreen.style.display = 'block';
-            loadHighscores();
-            break;
-        case 'gameOver':
-            ui.gameOverScreen.style.display = 'block';
-            ui.finalLevelEl.textContent = gameState.level;
-            ui.finalExpEl.textContent = gameState.experience;
-            checkHighscore();
-            break;
     }
+}
+
+function populateCharacterCreation() {
+    const characters = [
+        { name: 'Krieger', img: '/images/Krieger.png', description: 'Ein Meister des Nahkampfes, stark und widerstandsfähig.' },
+        { name: 'Kriegerin', img: '/images/Kriegerin.png', description: 'Eine Meisterin des Nahkampfes, stark und widerstandsfähig.' },
+        { name: 'Magier', img: '/images/Magier.png', description: 'Ein mächtiger Zauberer, der die arkanen Künste beherrscht.' },
+        { name: 'Schurke', img: '/images/Schurke.png', description: 'Ein listiger Dieb, der aus den Schatten zuschlägt.' },
+        { name: 'Ranger', img: '/images/Ranger.png', description: 'Ein geschickter Jäger, der mit Pfeil und Bogen umgehen kann.' },
+        { name: 'Arkaner Komponist', img: '/images/Arkaner Komponist.png', description: 'Ein seltener Barde, der Musik und Magie vereint.' }
+    ];
+
+    const container = document.getElementById('character-cards-container');
+    container.innerHTML = '';
+
+    characters.forEach(char => {
+        const card = document.createElement('div');
+        card.className = 'character-card';
+        card.innerHTML = `
+            <img src="${char.img}" alt="${char.name}">
+            <h3>${char.name}</h3>
+            <p>${char.description}</p>
+        `;
+
+        card.addEventListener('click', () => {
+            // Remove 'selected' class from all cards
+            document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
+            // Add 'selected' class to the clicked card
+            card.classList.add('selected');
+            ui.startGameBtn.disabled = false;
+        });
+        container.appendChild(card);
+    });
 }
 
 function resizeCanvas() {
@@ -273,7 +322,8 @@ function isColliding(obj1, obj2) {
 
 function gameOver() {
     gameState.isGameOver = true;
-    showScreen('gameOver');
+    // showScreen('gameOver'); // Game over screen not implemented yet
+    console.log("Game Over!");
 }
 
 function resetGame() {
@@ -308,89 +358,6 @@ function handleKeyDown(e) {
 
 function handleKeyUp(e) {
     keys[e.key] = false;
-}
-
-// Highscore functions
-function loadHighscores() {
-    // Load personal highscores from localStorage
-    const personalHighscores = JSON.parse(localStorage.getItem('rpgPersonalHighscores') || '[]');
-    displayHighscores(personalHighscores, ui.personalHighscoresEl);
-    
-    // Load global highscores from server (placeholder for now)
-    const globalHighscores = JSON.parse(localStorage.getItem('rpgGlobalHighscores') || '[]');
-    displayHighscores(globalHighscores, ui.globalHighscoresEl);
-}
-
-function displayHighscores(highscores, element) {
-    element.innerHTML = '';
-    
-    if (highscores.length === 0) {
-        element.innerHTML = '<li>Keine Highscores verfügbar</li>';
-        return;
-    }
-    
-    // Sort by level and experience (highest first) and take top 10
-    const topScores = highscores
-        .sort((a, b) => {
-            if (b.level !== a.level) return b.level - a.level;
-            return b.experience - a.experience;
-        })
-        .slice(0, 10);
-    
-    topScores.forEach((entry, index) => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-            <span>${index + 1}. ${entry.name}</span>
-            <span>Level ${entry.level} (${entry.experience} XP)</span>
-        `;
-        element.appendChild(li);
-    });
-}
-
-function checkHighscore() {
-    const personalHighscores = JSON.parse(localStorage.getItem('rpgPersonalHighscores') || '[]');
-    const currentScore = { level: gameState.level, experience: gameState.experience };
-    
-    const isNewPersonalHighscore = personalHighscores.length < 10 || 
-        personalHighscores.some(h => h.level < currentScore.level || 
-            (h.level === currentScore.level && h.experience < currentScore.experience));
-    
-    if (isNewPersonalHighscore) {
-        ui.newHighscoreEl.style.display = 'block';
-        ui.playerNameInput.focus();
-    } else {
-        ui.newHighscoreEl.style.display = 'none';
-    }
-}
-
-async function submitHighscore(name, level, experience) {
-    // Add to personal highscores
-    const personalHighscores = JSON.parse(localStorage.getItem('rpgPersonalHighscores') || '[]');
-    personalHighscores.push({ name, level, experience, date: new Date().toISOString() });
-    
-    // Keep only top 10
-    personalHighscores.sort((a, b) => {
-        if (b.level !== a.level) return b.level - a.level;
-        return b.experience - a.experience;
-    });
-    const top10 = personalHighscores.slice(0, 10);
-    
-    localStorage.setItem('rpgPersonalHighscores', JSON.stringify(top10));
-    
-    // TODO: Submit to server for global highscores
-    // For now, we'll use localStorage for global highscores too
-    const globalHighscores = JSON.parse(localStorage.getItem('rpgGlobalHighscores') || '[]');
-    globalHighscores.push({ name, level, experience, date: new Date().toISOString() });
-    
-    globalHighscores.sort((a, b) => {
-        if (b.level !== a.level) return b.level - a.level;
-        return b.experience - a.experience;
-    });
-    const top10Global = globalHighscores.slice(0, 10);
-    
-    localStorage.setItem('rpgGlobalHighscores', JSON.stringify(top10Global));
-    
-    return Promise.resolve();
 }
 
 // Start the game

@@ -4,15 +4,15 @@
     "email": "christiandittrich74@googlemail.com",
     "password": "$2b$10$iNPU5YqkJeIy5nh3wnTrK.ayhgQ0/MJkWX2EJBOF0BjcGX9RMD/vG",
     "resources": {
-      "gold": 154,
-      "holz": 132,
-      "erz": 133,
-      "kristall": 133
+      "gold": 172,
+      "holz": 150,
+      "erz": 151,
+      "kristall": 151
     },
     "unlockedGames": [],
-    "lastLogin": "2025-08-10T18:34:30.767Z",
+    "lastLogin": "2025-08-12T08:58:44.532Z",
     "createdAt": "2025-08-08T09:17:23.842Z",
-    "isOnline": true,
+    "isOnline": false,
     "isAdmin": true,
     "isBanned": false,
     "rpg": {
@@ -28,17 +28,17 @@
     "email": "c_dittrich@gmx.de",
     "password": "$2b$10$jv1/4CW4Rqn3WOBKUfCss.P0qSPEVk5CMo3q805wYqHgQ1Hl827/O",
     "resources": {
-      "gold": 111,
-      "holz": 221,
-      "erz": 220,
-      "kristall": 171
+      "gold": 128,
+      "holz": 239,
+      "erz": 238,
+      "kristall": 189
     },
     "unlockedGames": [
       "space-shooter"
     ],
-    "lastLogin": "2025-08-10T18:41:55.341Z",
+    "lastLogin": "2025-08-12T08:58:44.029Z",
     "createdAt": "2025-08-08T09:47:25.858Z",
-    "isOnline": true,
+    "isOnline": false,
     "isAdmin": false,
     "isBanned": false,
     "rpg": {

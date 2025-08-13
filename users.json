@@ -28,17 +28,17 @@
     "email": "c_dittrich@gmx.de",
     "password": "$2b$10$jv1/4CW4Rqn3WOBKUfCss.P0qSPEVk5CMo3q805wYqHgQ1Hl827/O",
     "resources": {
-      "gold": 128,
-      "holz": 239,
-      "erz": 238,
-      "kristall": 189
+      "gold": 489,
+      "holz": 601,
+      "erz": 599,
+      "kristall": 551
     },
     "unlockedGames": [
       "space-shooter"
     ],
-    "lastLogin": "2025-08-12T08:58:44.029Z",
+    "lastLogin": "2025-08-13T14:33:06.537Z",
     "createdAt": "2025-08-08T09:47:25.858Z",
-    "isOnline": false,
+    "isOnline": true,
     "isAdmin": false,
     "isBanned": false,
     "rpg": {
@@ -47,6 +47,15 @@
       "strength": 5,
       "dexterity": 5,
       "intelligence": 5
+    },
+    "selectedCharacter": {
+      "name": "Hannes",
+      "image": "/images/RPG/Magier.png",
+      "stats": {
+        "strength": 2,
+        "dexterity": 5,
+        "intelligence": 8
+      }
     }
   }
 }

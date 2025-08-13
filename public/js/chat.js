@@ -3,12 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentUser = null;
     let isAdmin = false;
     let sendToTarget = null;
+    let characterIsSelected = false;
 
     // --- Configs ---
     const GAMES_CONFIG = {
         'space-shooter': {
             displayName: 'Space Shooter',
-            icon: '/images/space-shooter.png',
+            icon: '/images/Chat/space-shooter.png',
             costs: { gold: 100, kristall: 25 }
         }
     };
@@ -71,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const charStrength = document.getElementById('charStrength');
     const charDexterity = document.getElementById('charDexterity');
     const charIntelligence = document.getElementById('charIntelligence');
-    const levelUpBtn = document.getElementById('levelUpBtn');
     const startRpgBtn = document.getElementById('startRpgBtn');
 
 
@@ -116,21 +116,46 @@ document.addEventListener('DOMContentLoaded', () => {
             if (unlockedGames.includes(gameId)) {
                 gameElement.innerHTML = `<a href="/games/${gameId}/index.html" target="_blank" class="play-button"><img src="${game.icon}" alt="${game.displayName}" class="game-icon"><span>${game.displayName} spielen</span></a>`;
             } else {
-                const costString = Object.entries(game.costs).map(([resource, cost]) => `<span class="cost-item">${cost} <img src="/images/${resource}.png" class="resource-cost-icon"></span>`).join('');
+                const costString = Object.entries(game.costs).map(([resource, cost]) => `<span class="cost-item">${cost} <img src="/images/Chat/${resource}.png" class="resource-cost-icon"></span>`).join('');
                 gameElement.innerHTML = `<button class="unlock-button" data-gameid="${gameId}"><img src="${game.icon}" alt="${game.displayName}" class="game-icon"><span>${game.displayName} freischalten</span><div class="cost-container">${costString}</div></button>`;
             }
             gameList.appendChild(gameElement);
         });
     }
 
-    function updateCharacterSheet(rpgData) {
+    function updateCharacterSheet(userData) {
+        if (!userData) return;
         charSheet.style.display = 'block';
-        const data = rpgData || {};
-        charLevel.textContent = data.level || 1;
-        charXP.textContent = data.xp || 0;
-        charStrength.textContent = data.strength || 0;
-        charDexterity.textContent = data.dexterity || 0;
-        charIntelligence.textContent = data.intelligence || 0;
+
+        const rpgData = userData.rpg || {};
+        const selectedChar = userData.selectedCharacter;
+
+        // Update level and XP from base RPG stats
+        charLevel.textContent = rpgData.level || 1;
+        charXP.textContent = rpgData.xp || 0;
+
+        // Update portrait, name, and stats from the selected character if it exists
+        const portraitEl = document.getElementById('char-portrait');
+        const nameEl = document.getElementById('char-name');
+
+        if (selectedChar) {
+            portraitEl.src = selectedChar.image;
+            nameEl.textContent = selectedChar.name;
+            charStrength.textContent = selectedChar.stats.strength;
+            charDexterity.textContent = selectedChar.stats.dexterity;
+            charIntelligence.textContent = selectedChar.stats.intelligence;
+            characterIsSelected = true;
+            startRpgBtn.textContent = 'Spiel fortsetzen';
+        } else {
+            // Fallback to default placeholder and base RPG stats if no character is selected
+            portraitEl.src = '/images/Chat/placeholder.svg';
+            nameEl.textContent = 'Charakter';
+            charStrength.textContent = rpgData.strength || 0;
+            charDexterity.textContent = rpgData.dexterity || 0;
+            charIntelligence.textContent = rpgData.intelligence || 0;
+            characterIsSelected = false;
+            startRpgBtn.textContent = 'RPG starten';
+        }
     }
 
     // --- Authentication ---
@@ -200,7 +225,13 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('user data', (data) => {
         updateResourceDisplay(data.resources);
         updateGameList(data.unlockedGames);
-        updateCharacterSheet(data.rpg);
+        updateCharacterSheet(data); // Pass the whole data object
+
+        if (data.selectedCharacter) {
+            localStorage.setItem('selectedCharacter', JSON.stringify(data.selectedCharacter));
+        } else {
+            localStorage.removeItem('selectedCharacter');
+        }
     });
 
     // --- Logout ---
@@ -322,12 +353,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    levelUpBtn.addEventListener('click', () => {
-        socket.emit('character:level-up');
-    });
-
     startRpgBtn.addEventListener('click', () => {
-        window.open('/games/rpg/index.html', '_blank');
+        const url = characterIsSelected ? '/games/rpg/index.html?action=continue' : '/games/rpg/index.html';
+        window.open(url, '_blank');
     });
 
     if (adminPanelBtn) {
@@ -480,8 +508,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'game:score') {
+        if (!event.data) return;
+
+        // Handle score submissions from games
+        if (event.data.type === 'game:score') {
             socket.emit('game:submit-score', event.data.payload);
+        }
+
+        // Handle character selection from RPG
+        if (event.data.type === 'character-selected') {
+            const charData = event.data.data;
+            localStorage.setItem('selectedCharacter', JSON.stringify(charData));
+            console.log('Received character data:', charData);
+
+            const portraitEl = document.getElementById('char-portrait');
+            const nameEl = document.getElementById('char-name');
+
+            if (portraitEl) {
+                portraitEl.src = charData.image;
+            }
+            if (nameEl && charData.name) {
+                nameEl.textContent = charData.name;
+            }
+            if (charData.stats) {
+                charStrength.textContent = charData.stats.strength;
+                charDexterity.textContent = charData.stats.dexterity;
+                charIntelligence.textContent = charData.stats.intelligence;
+            }
+
+            // Set state for direct game start
+            characterIsSelected = true;
+            startRpgBtn.textContent = 'Spiel fortsetzen';
+
+            // Also save the character data to the server
+            socket.emit('character:save', charData);
         }
     });
 });

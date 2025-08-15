@@ -1,64 +1,64 @@
 const NPC_CLASSES = {
-    'Krieger': { img: { male: '/images/RPG/Krieger.png', female: '/images/RPG/Kriegerin.png' } },
-    'Schurke': { img: { male: '/images/RPG/Schurke.png', female: '/images/RPG/Schurkin.png' } },
-    'Bogenschütze': { img: { male: '/images/RPG/Archer.png', female: '/images/RPG/Archerin.png' } },
-    'Magier': { img: { male: '/images/RPG/Magier.png', female: '/images/RPG/Magierin.png' } },
-    'Heiler': { img: { male: '/images/RPG/Heiler.png', female: '/images/RPG/Heilerin.png' } }
+    'Krieger': { img: { male: '/images/RPG/Charakter/Krieger_m.png', female: '/images/RPG/Charakter/Krieger_w.png' } },
+    'Schurke': { img: { male: '/images/RPG/Charakter/Schurke_m.png', female: '/images/RPG/Charakter/Schurke_w.png' } },
+    'Bogenschütze': { img: { male: '/images/RPG/Charakter/Archer_m.png', female: '/images/RPG/Charakter/Archer_w.png' } },
+    'Magier': { img: { male: '/images/RPG/Charakter/Magier_m.png', female: '/images/RPG/Charakter/Magier_w.png' } },
+    'Heiler': { img: { male: '/images/RPG/Charakter/Heiler_m.png', female: '/images/RPG/Charakter/Heiler_w.png' } }
 };
 
 const LOCATIONS = {
     'city_1': {
         name: 'Varethyn',
         coords: { top: '11.24%', left: '26.06%', width: '10%', height: '15%' },
-        detailMap: '/images/RPG/Citymap.png',
+        detailMap: '/images/RPG/Maps/Citymap.png',
         actions: ['trade', 'quest', 'rest']
     },
     'village_2': {
         name: 'Dornhall',
         coords: { top: '38.06%', left: '16.24%', width: '8%', height: '8%' },
-        detailMap: '/images/RPG/Villagemap.png',
+        detailMap: '/images/RPG/Maps/Villagemap.png',
         actions: ['quest', 'rest']
     },
     'village_3': {
         name: 'Myrrgarde',
         coords: { top: '48.12%', left: '31.15%', width: '8%', height: '8%' },
-        detailMap: '/images/RPG/Villagemap.png',
+        detailMap: '/images/RPG/Maps/Villagemap.png',
         actions: ['quest', 'rest']
     },
     'forest_4': {
         name: 'Ysmereth',
         coords: { top: '25.25%', left: '45.77%', width: '15%', height: '15%' },
-        detailMap: '/images/RPG/Wald.png',
+        detailMap: '/images/RPG/Maps/Wald.png',
         actions: ['explore', 'gather']
     },
     'village_5': {
         name: 'Elaris',
         coords: { top: '65.24%', left: '15.02%', width: '8%', height: '8%' },
-        detailMap: '/images/RPG/Villagemap.png',
+        detailMap: '/images/RPG/Maps/Villagemap.png',
         actions: ['quest', 'rest']
     },
     'city_6': {
         name: 'Bruchhain',
         coords: { top: '65.92%', left: '35.78%', width: '10%', height: '10%' },
-        detailMap: '/images/RPG/Citymap.png',
+        detailMap: '/images/RPG/Maps/Citymap.png',
         actions: ['trade', 'quest', 'rest']
     },
     'city_7': {
         name: 'Tharvok',
         coords: { top: '52.8%', left: '67.05%', width: '13%', height: '13%' },
-        detailMap: '/images/RPG/Citymap.png',
+        detailMap: '/images/RPG/Maps/Citymap.png',
         actions: ['trade', 'quest', 'rest']
     },
     'dungeon_8': {
         name: 'Schattenfels',
         coords: { top: '68.45%', left: '72.44%', width: '9%', height: '9%' },
-        detailMap: '/images/RPG/Dungeon.png',
+        detailMap: '/images/RPG/Maps/Dungeon.png',
         actions: ['enter_dungeon']
     },
     'village_9': {
         name: 'Kragmoor',
         coords: { top: '26.54%', left: '80.27%', width: '8%', height: '8%' },
-        detailMap: '/images/RPG/Villagemap.png',
+        detailMap: '/images/RPG/Maps/Villagemap.png',
         actions: ['quest', 'rest']
     }
 };
@@ -69,8 +69,8 @@ const SECRET_CLASSES = [
         requirements: { strength: 1, dexterity: 7, intelligence: 7 },
         message: 'Herzlichen Glückwunsch: Du hast den Arkanen Komponisten freigeschaltet.',
         img: {
-            male: '/images/RPG/arkanerKomponist.png',
-            female: '/images/RPG/arkaneKomponistin.png'
+            male: '/images/RPG/Charakter/arkaner_m.png',
+            female: '/images/RPG/Charakter/arkaner_w.png'
         }
     }
 ];
@@ -134,6 +134,11 @@ function init() {
         // Audio
         bgMusic: document.getElementById('bg-music'),
         sfxClick: document.getElementById('sfx-click'),
+        sfxSlideOpen: document.getElementById('sfx-slide-open'),
+        sfxSlideClose: document.getElementById('sfx-slide-close'),
+        sfxParchment: document.getElementById('sfx-parchment'),
+        sfxQuestAccept: document.getElementById('sfx-quest-accept'),
+        sfxQuestDecline: document.getElementById('sfx-quest-decline'),
         musicVolumeSlider: document.getElementById('music-volume'),
         sfxVolumeSlider: document.getElementById('sfx-volume'),
 
@@ -164,6 +169,11 @@ function init() {
         loadGameModal: document.getElementById('load-game-modal'),
         saveSlotsContainer: document.getElementById('save-slots-container'),
         cancelLoadBtn: document.getElementById('cancel-load-btn'),
+
+        // Quest Scroll Modal
+        questScrollModal: document.getElementById('quest-scroll-modal'),
+        questAcceptBtn: document.getElementById('quest-accept-btn'),
+        questDeclineBtn: document.getElementById('quest-decline-btn'),
     };
     
     // Set up event listeners
@@ -220,6 +230,10 @@ function setupEventListeners() {
     ui.startGameBtn.addEventListener('click', () => showScreen('game'));
     ui.startGameDirektBtn.addEventListener('click', () => showScreen('game'));
     ui.backToWorldMapBtn.addEventListener('click', () => {
+        if (ui.sfxSlideClose) {
+            ui.sfxSlideClose.currentTime = 0;
+            ui.sfxSlideClose.play();
+        }
         // Bring map wrapper to front so the closing animation is visible
         ui.worldMapWrapper.style.zIndex = 2;
 
@@ -350,6 +364,32 @@ function setupEventListeners() {
             alert(`Fehler beim Speichern: ${error.message}`);
         }
     });
+
+    // Quest Scroll Modal Listeners
+    ui.questAcceptBtn.addEventListener('click', () => {
+        if (ui.sfxQuestAccept) {
+            ui.sfxQuestAccept.currentTime = 0;
+            ui.sfxQuestAccept.play();
+        }
+
+        // Save the current NPC party to localStorage for the battle screen
+        try {
+            localStorage.setItem('npcParty', JSON.stringify(npcParty));
+        } catch (e) {
+            console.error("Could not save NPC party to localStorage:", e);
+        }
+
+        // Navigate to the battle screen
+        window.location.href = 'battle.html';
+    });
+
+    ui.questDeclineBtn.addEventListener('click', () => {
+        if (ui.sfxQuestDecline) {
+            ui.sfxQuestDecline.currentTime = 0;
+            ui.sfxQuestDecline.play();
+        }
+        ui.questScrollModal.style.display = 'none';
+    });
 }
 
 // Show a specific screen
@@ -423,7 +463,7 @@ function setupNpcSelection() {
         }
 
         const savedNpc = npcParty[i];
-        const imgSrc = savedNpc ? NPC_CLASSES[savedNpc.className].img[savedNpc.gender] : '/images/RPG/male_silhouette.svg';
+        const imgSrc = savedNpc ? NPC_CLASSES[savedNpc.className].img[savedNpc.gender] : '/images/RPG/Charakter/male_silhouette.svg';
 
         card.innerHTML = `
             <img src="${imgSrc}" alt="NPC ${i + 1}">
@@ -451,10 +491,17 @@ function setupNpcSelection() {
 
             if (selectedClass && NPC_CLASSES[selectedClass]) {
                 // For now, let's assume a default gender, e.g., 'male'
-                img.src = NPC_CLASSES[selectedClass].img.male;
-                npcParty[slot] = { className: selectedClass, gender: 'male' }; // Save selection
+                const gender = 'male';
+                const npcData = NPC_CLASSES[selectedClass];
+                img.src = npcData.img[gender];
+                // Create a full character object for the NPC
+                npcParty[slot] = {
+                    name: selectedClass,
+                    image: npcData.img[gender],
+                    // We can add stats here later if needed
+                };
             } else {
-                img.src = '/images/RPG/male_silhouette.svg';
+                img.src = '/images/RPG/Charakter/male_silhouette.svg';
                 npcParty[slot] = null; // Clear selection
             }
         });
@@ -498,11 +545,13 @@ function createLocationOverlays() {
 }
 
 function showLocationDetail(locationId) {
+    if (ui.sfxSlideOpen) {
+        ui.sfxSlideOpen.currentTime = 0;
+        ui.sfxSlideOpen.play();
+    }
     currentLocationId = locationId;
     const location = LOCATIONS[locationId];
     if (!location) return;
-
-    // --- New Animation Logic ---
 
     // 1. Prepare the detail screen content
     const locationName = document.getElementById('location-name');
@@ -516,6 +565,17 @@ function showLocationDetail(locationId) {
         const actionButton = document.createElement('button');
         actionButton.className = 'action-btn';
         actionButton.textContent = action.replace('_', ' ');
+
+        if (action === 'quest') {
+            actionButton.addEventListener('click', () => {
+                if (ui.sfxParchment) {
+                    ui.sfxParchment.currentTime = 0;
+                    ui.sfxParchment.play();
+                }
+                ui.questScrollModal.style.display = 'flex';
+            });
+        }
+
         actionsContainer.appendChild(actionButton);
     });
 
@@ -525,15 +585,17 @@ function showLocationDetail(locationId) {
     ui.locationTitleDisplay.textContent = location.name;
     ui.locationTitleDisplay.style.opacity = 1;
 
-    // 3. Trigger the opening animation
+    // 3. Make the detail screen visible BEFORE the animation starts
+    ui.locationDetailScreen.style.display = 'block';
+
+    // 4. Trigger the opening animation
     const mapLeft = document.getElementById('world-map-left');
     const mapRight = document.getElementById('world-map-right');
     mapLeft.classList.add('split');
     mapRight.classList.add('split');
 
-    // 4. After the animation, show the detail screen and send map to back
+    // 5. After the animation, send the world map wrapper to the back
     setTimeout(() => {
-        ui.locationDetailScreen.style.display = 'block';
         ui.worldMapWrapper.style.zIndex = 0;
     }, 800); // Must match animation duration
 }
@@ -716,37 +778,37 @@ function populateCharacterCreation() {
             name: 'Krieger',
             description: 'Stark und widerstandsfähig, ein Meister des Nahkampfes.',
             stats: { strength: 8, dexterity: 4, intelligence: 3 },
-            img: { male: '/images/RPG/Krieger.png', female: '/images/RPG/Kriegerin.png' }
+            img: { male: '/images/RPG/Charakter/Krieger_m.png', female: '/images/RPG/Charakter/Krieger_w.png' }
         },
         {
             name: 'Magier',
             description: 'Beherrscht die arkanen Künste, um Feinde aus der Ferne zu vernichten.',
             stats: { strength: 2, dexterity: 5, intelligence: 8 },
-            img: { male: '/images/RPG/Magier.png', female: '/images/RPG/Magierin.png' }
+            img: { male: '/images/RPG/Charakter/Magier_m.png', female: '/images/RPG/Charakter/Magier_w.png' }
         },
         {
             name: 'Schurke',
             description: 'Ein listiger Kämpfer, der aus den Schatten zuschlägt.',
             stats: { strength: 4, dexterity: 8, intelligence: 3 },
-            img: { male: '/images/RPG/Schurke.png', female: '/images/RPG/Schurkin.png' }
+            img: { male: '/images/RPG/Charakter/Schurke_m.png', female: '/images/RPG/Charakter/Schurke_w.png' }
         },
         {
             name: 'Bogenschütze',
             description: 'Ein Meisterschütze mit Pfeil und Bogen.',
             stats: { strength: 4, dexterity: 8, intelligence: 3 },
-            img: { male: '/images/RPG/Archer.png', female: '/images/RPG/Archerin.png' }
+            img: { male: '/images/RPG/Charakter/Archer_m.png', female: '/images/RPG/Charakter/Archer_w.png' }
         },
         {
             name: 'Heiler',
             description: 'Ein heiliger Kleriker, der Verbündete heilt und schützt.',
             stats: { strength: 3, dexterity: 4, intelligence: 8 },
-            img: { male: '/images/RPG/Heiler.png', female: '/images/RPG/Heilerin.png' }
+            img: { male: '/images/RPG/Charakter/Heiler_m.png', female: '/images/RPG/Charakter/Heiler_w.png' }
         },
         {
             name: 'Eigener Charakter',
             description: 'Erstelle einen Charakter mit frei verteilbaren Attributpunkten.',
             isCustom: true,
-            img: { male: '/images/RPG/male_silhouette.svg', female: '/images/RPG/female_silhouette.svg' }
+            img: { male: '/images/RPG/Charakter/male_silhouette.svg', female: '/images/RPG/Charakter/female_silhouette.svg' }
         }
     ];
 

@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
             startRpgBtn.textContent = 'Spiel fortsetzen';
         } else {
             // Fallback to default placeholder and base RPG stats if no character is selected
-            portraitEl.src = '/images/Chat/placeholder.svg';
+            portraitEl.src = '/images/RPG/Charakter/male_silhouette.svg';
             nameEl.textContent = 'Charakter';
             charStrength.textContent = rpgData.strength || 0;
             charDexterity.textContent = rpgData.dexterity || 0;
@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     startRpgBtn.addEventListener('click', () => {
-        const url = characterIsSelected ? '/games/rpg/index.html?action=continue' : '/games/rpg/index.html';
+        const url = '/games/rpg/index.html';
         window.open(url, '_blank');
     });
 

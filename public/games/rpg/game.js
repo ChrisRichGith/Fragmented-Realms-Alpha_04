@@ -719,8 +719,11 @@ function handleConfirmCustomChar() {
 
         if (unlockedClass) {
             alert(unlockedClass.message);
+            customCharState.className = unlockedClass.name; // Save the class name
             const selectedGender = customCard.dataset.gender;
             customCard.querySelector('img').src = unlockedClass.img[selectedGender];
+        } else {
+            customCharState.className = 'Abenteurer'; // Default for custom chars
         }
 
         customCard.querySelectorAll('.gender-btn').forEach(btn => btn.disabled = true);
@@ -758,6 +761,7 @@ function handleConfirmPredefName() {
     const { classData, card } = namingContext;
     const charData = {
         name: charName,
+        className: classData.name, // <-- Add className
         image: classData.img[card.dataset.gender],
         stats: classData.stats
     };
@@ -765,7 +769,8 @@ function handleConfirmPredefName() {
     if (window.opener) {
         window.opener.postMessage({ type: 'character-selected', data: charData }, '*');
     } else {
-        alert('Hauptfenster nicht gefunden. Charakterauswahl kann nicht gesendet werden.');
+        // Fallback for when not in a popup
+        localStorage.setItem('selectedCharacter', JSON.stringify(charData));
     }
 
     closeNameCharModal();
@@ -889,13 +894,14 @@ function populateCharacterCreation() {
                 }
                 const charData = {
                     name: customCharState.name,
+                    className: customCharState.className,
                     image: card.querySelector('img').src,
                     stats: customCharState.stats
                 };
                 if (window.opener) {
                     window.opener.postMessage({ type: 'character-selected', data: charData }, '*');
                 } else {
-                    alert('Hauptfenster nicht gefunden.');
+                    localStorage.setItem('selectedCharacter', JSON.stringify(charData));
                 }
             } else {
                 // For predefined classes, open the naming modal.

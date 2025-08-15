@@ -7,59 +7,59 @@ const NPC_CLASSES = {
 };
 
 const LOCATIONS = {
-    'location_1': {
-        name: 'Location 1',
-        coords: { top: '10%', left: '10%', width: '8%', height: '8%' },
-        detailMap: null,
-        actions: []
+    'city_1': {
+        name: 'Varethyn',
+        coords: { top: '11.24%', left: '26.06%', width: '10%', height: '15%' },
+        detailMap: '/images/RPG/Citymap.png',
+        actions: ['trade', 'quest', 'rest']
     },
-    'location_2': {
-        name: 'Location 2',
-        coords: { top: '20%', left: '20%', width: '8%', height: '8%' },
-        detailMap: null,
-        actions: []
+    'village_2': {
+        name: 'Dornhall',
+        coords: { top: '38.06%', left: '16.24%', width: '8%', height: '8%' },
+        detailMap: '/images/RPG/Villagemap.png',
+        actions: ['quest', 'rest']
     },
-    'location_3': {
-        name: 'Location 3',
-        coords: { top: '30%', left: '30%', width: '8%', height: '8%' },
-        detailMap: null,
-        actions: []
+    'village_3': {
+        name: 'Myrrgarde',
+        coords: { top: '48.12%', left: '31.15%', width: '8%', height: '8%' },
+        detailMap: '/images/RPG/Villagemap.png',
+        actions: ['quest', 'rest']
     },
-    'location_4': {
-        name: 'Location 4',
-        coords: { top: '40%', left: '40%', width: '8%', height: '8%' },
-        detailMap: null,
-        actions: []
+    'forest_4': {
+        name: 'Ysmereth',
+        coords: { top: '25.25%', left: '45.77%', width: '15%', height: '15%' },
+        detailMap: '/images/RPG/Wald.png',
+        actions: ['explore', 'gather']
     },
-    'location_5': {
-        name: 'Location 5',
-        coords: { top: '50%', left: '50%', width: '8%', height: '8%' },
-        detailMap: null,
-        actions: []
+    'village_5': {
+        name: 'Elaris',
+        coords: { top: '65.24%', left: '15.02%', width: '8%', height: '8%' },
+        detailMap: '/images/RPG/Villagemap.png',
+        actions: ['quest', 'rest']
     },
-    'location_6': {
-        name: 'Location 6',
-        coords: { top: '60%', left: '60%', width: '8%', height: '8%' },
-        detailMap: null,
-        actions: []
+    'city_6': {
+        name: 'Bruchhain',
+        coords: { top: '65.92%', left: '35.78%', width: '10%', height: '10%' },
+        detailMap: '/images/RPG/Citymap.png',
+        actions: ['trade', 'quest', 'rest']
     },
-    'location_7': {
-        name: 'Location 7',
-        coords: { top: '70%', left: '70%', width: '8%', height: '8%' },
-        detailMap: null,
-        actions: []
+    'city_7': {
+        name: 'Tharvok',
+        coords: { top: '52.8%', left: '67.05%', width: '13%', height: '13%' },
+        detailMap: '/images/RPG/Citymap.png',
+        actions: ['trade', 'quest', 'rest']
     },
-    'location_8': {
-        name: 'Location 8',
-        coords: { top: '80%', left: '80%', width: '8%', height: '8%' },
-        detailMap: null,
-        actions: []
+    'dungeon_8': {
+        name: 'Schattenfels',
+        coords: { top: '68.45%', left: '72.44%', width: '9%', height: '9%' },
+        detailMap: '/images/RPG/Dungeon.png',
+        actions: ['enter_dungeon']
     },
-    'location_9': {
-        name: 'Location 9',
-        coords: { top: '15%', left: '80%', width: '8%', height: '8%' },
-        detailMap: null,
-        actions: []
+    'village_9': {
+        name: 'Kragmoor',
+        coords: { top: '26.54%', left: '80.27%', width: '8%', height: '8%' },
+        detailMap: '/images/RPG/Villagemap.png',
+        actions: ['quest', 'rest']
     }
 };
 
@@ -93,6 +93,9 @@ let customCharState = {
 // Naming modal state
 let namingContext = null;
 
+// Party state
+let npcParty = [null, null, null];
+let currentLocationId = null;
 
 // Initialize game
 function init() {
@@ -115,6 +118,13 @@ function init() {
         startGameBtn: document.getElementById('start-game-btn'),
         startGameDirektBtn: document.getElementById('start-game-direkt-btn'),
         backToWorldMapBtn: document.getElementById('back-to-world-map-btn'),
+        savePartyBtn: document.getElementById('save-party-btn'),
+        loadPartyBtn: document.getElementById('load-party-btn'),
+        rpgMenuToggleBtn: document.getElementById('rpg-menu-toggle-btn'),
+        rpgMenuPopup: document.getElementById('rpg-menu-popup'),
+        locationOverlayContainer: document.getElementById('location-overlay-container'),
+        locationTitleDisplay: document.getElementById('location-title-display'),
+        worldMapWrapper: document.getElementById('world-map-wrapper'),
 
         // Game UI
         levelEl: document.getElementById('level'),
@@ -143,6 +153,17 @@ function init() {
         predefCharNameInput: document.getElementById('predef-char-name-input'),
         confirmPredefNameBtn: document.getElementById('confirm-predef-name-btn'),
         cancelPredefNameBtn: document.getElementById('cancel-predef-name-btn'),
+
+        // Save Game Modal
+        saveGameModal: document.getElementById('save-game-modal'),
+        saveNameInput: document.getElementById('save-name-input'),
+        confirmSaveBtn: document.getElementById('confirm-save-btn'),
+        cancelSaveBtn: document.getElementById('cancel-save-btn'),
+
+        // Load Game Modal
+        loadGameModal: document.getElementById('load-game-modal'),
+        saveSlotsContainer: document.getElementById('save-slots-container'),
+        cancelLoadBtn: document.getElementById('cancel-load-btn'),
     };
     
     // Set up event listeners
@@ -182,8 +203,6 @@ function setupEventListeners() {
     // Game controls
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('mouseup', dragEnd);
     
     // UI Buttons
     const buttons = document.querySelectorAll('button');
@@ -192,10 +211,6 @@ function setupEventListeners() {
     });
 
     ui.newGameBtn.addEventListener('click', () => showScreen('character-creation'));
-    ui.loadGameBtn.addEventListener('click', () => {
-        console.log('Load Game clicked - functionality to be implemented.');
-        alert('Laden-Funktion noch nicht implementiert.');
-    });
     ui.optionsBtn.addEventListener('click', () => {
         console.log("Options button clicked!");
         showScreen('options');
@@ -204,9 +219,38 @@ function setupEventListeners() {
     ui.creationBackBtn.addEventListener('click', () => showScreen('title'));
     ui.startGameBtn.addEventListener('click', () => showScreen('game'));
     ui.startGameDirektBtn.addEventListener('click', () => showScreen('game'));
-    ui.backToWorldMapBtn.addEventListener('click', () => showScreen('game'));
+    ui.backToWorldMapBtn.addEventListener('click', () => {
+        // Bring map wrapper to front so the closing animation is visible
+        ui.worldMapWrapper.style.zIndex = 2;
+
+        // Hide the location title
+        ui.locationTitleDisplay.style.opacity = 0;
+
+        // Remove the split class to trigger the closing animation
+        const mapLeft = document.getElementById('world-map-left');
+        const mapRight = document.getElementById('world-map-right');
+        mapLeft.classList.remove('split');
+        mapRight.classList.remove('split');
+
+        // After the animation, hide the location detail screen and show overlays
+        setTimeout(() => {
+            ui.locationDetailScreen.style.display = 'none';
+            ui.locationOverlayContainer.style.display = 'block';
+            // Use a nested timeout to allow the display property to apply before adding the class for the transition
+            setTimeout(() => {
+                ui.locationOverlayContainer.classList.add('active');
+            }, 20);
+        }, 800); // Must match animation duration
+    });
+    ui.savePartyBtn.addEventListener('click', () => {
+        ui.saveGameModal.style.display = 'flex';
+    });
     ui.exitBtn.addEventListener('click', () => {
         window.close();
+    });
+
+    ui.rpgMenuToggleBtn.addEventListener('click', () => {
+        ui.rpgMenuPopup.classList.toggle('hidden');
     });
 
     // Volume Sliders
@@ -227,6 +271,85 @@ function setupEventListeners() {
     // Naming Modal Listeners
     ui.cancelPredefNameBtn.addEventListener('click', closeNameCharModal);
     ui.confirmPredefNameBtn.addEventListener('click', handleConfirmPredefName);
+
+    // Save Game Modal Listeners
+    ui.cancelSaveBtn.addEventListener('click', () => {
+        ui.saveGameModal.style.display = 'none';
+    });
+
+    const showLoadGameModal = async () => {
+        try {
+            const response = await fetch('/api/gamesaves');
+            if (!response.ok) {
+                throw new Error('Failed to fetch save games.');
+            }
+            const saveFiles = await response.json();
+
+            ui.saveSlotsContainer.innerHTML = ''; // Clear previous slots
+
+            if (saveFiles.length === 0) {
+                ui.saveSlotsContainer.innerHTML = '<p>Keine Spielstände gefunden.</p>';
+            } else {
+                saveFiles.forEach(fileName => {
+                    const button = document.createElement('button');
+                    button.textContent = fileName.replace('.json', '');
+                    button.classList.add('save-slot-btn');
+                    button.addEventListener('click', () => loadGame(fileName));
+                    ui.saveSlotsContainer.appendChild(button);
+                });
+            }
+
+            ui.loadGameModal.style.display = 'flex';
+        } catch (error) {
+            console.error('Error loading save games:', error);
+            alert('Fehler beim Abrufen der Spielstände.');
+        }
+    };
+
+    ui.loadGameBtn.addEventListener('click', showLoadGameModal);
+    ui.loadPartyBtn.addEventListener('click', showLoadGameModal);
+
+    ui.cancelLoadBtn.addEventListener('click', () => {
+        ui.loadGameModal.style.display = 'none';
+    });
+    ui.confirmSaveBtn.addEventListener('click', async () => {
+        const saveName = ui.saveNameInput.value.trim();
+        if (saveName.length < 3 || !/^[a-zA-Z0-9_ -]+$/.test(saveName)) {
+             alert('Bitte gib einen gültigen Namen mit mindestens 3 Zeichen ein (nur Buchstaben, Zahlen, Leerzeichen, _ und -).');
+            return;
+        }
+
+        const charData = JSON.parse(localStorage.getItem('selectedCharacter'));
+        const saveData = {
+            name: saveName,
+            character: charData,
+            party: npcParty,
+            location: currentLocationId
+        };
+
+        try {
+            const response = await fetch('/api/gamesaves', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(saveData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to save game.');
+            }
+
+            ui.saveNameInput.value = '';
+            ui.saveGameModal.style.display = 'none';
+            alert('Spielstand gespeichert!');
+
+        } catch (error) {
+            console.error('Error saving game:', error);
+            alert(`Fehler beim Speichern: ${error.message}`);
+        }
+    });
 }
 
 // Show a specific screen
@@ -299,8 +422,11 @@ function setupNpcSelection() {
             options += `<option value="${className}">${className}</option>`;
         }
 
+        const savedNpc = npcParty[i];
+        const imgSrc = savedNpc ? NPC_CLASSES[savedNpc.className].img[savedNpc.gender] : '/images/RPG/male_silhouette.svg';
+
         card.innerHTML = `
-            <img src="/images/RPG/male_silhouette.svg" alt="NPC ${i + 1}">
+            <img src="${imgSrc}" alt="NPC ${i + 1}">
             <div class="npc-card-details">
                 <h4>Begleiter ${i + 1}</h4>
                 <select class="npc-class-select" data-slot="${i}">
@@ -309,21 +435,27 @@ function setupNpcSelection() {
             </div>
         `;
         npcContainer.appendChild(card);
+
+        if (savedNpc) {
+            card.querySelector('.npc-class-select').value = savedNpc.className;
+        }
     }
 
     const npcSelects = document.querySelectorAll('.npc-class-select');
     npcSelects.forEach(select => {
         select.addEventListener('change', (event) => {
             const selectedClass = event.target.value;
-            const slot = event.target.dataset.slot;
+            const slot = parseInt(event.target.dataset.slot, 10);
             const card = event.target.closest('.npc-card');
             const img = card.querySelector('img');
 
             if (selectedClass && NPC_CLASSES[selectedClass]) {
                 // For now, let's assume a default gender, e.g., 'male'
                 img.src = NPC_CLASSES[selectedClass].img.male;
+                npcParty[slot] = { className: selectedClass, gender: 'male' }; // Save selection
             } else {
                 img.src = '/images/RPG/male_silhouette.svg';
+                npcParty[slot] = null; // Clear selection
             }
         });
     });
@@ -335,48 +467,50 @@ function createLocationOverlays() {
 
     for (const locationId in LOCATIONS) {
         const location = LOCATIONS[locationId];
+
+        // Create a container for each location spot
+        const locationSpot = document.createElement('div');
+        locationSpot.className = 'location-spot';
+        locationSpot.style.top = location.coords.top;
+        locationSpot.style.left = location.coords.left;
+        locationSpot.style.width = location.coords.width;
+        locationSpot.style.height = location.coords.height;
+        locationSpot.dataset.locationId = locationId;
+        locationSpot.title = location.name; // Show name on hover
+
+        // The clickable overlay itself
         const overlay = document.createElement('div');
         overlay.className = 'location-overlay';
-        overlay.style.top = location.coords.top;
-        overlay.style.left = location.coords.left;
-        overlay.style.width = location.coords.width;
-        overlay.style.height = location.coords.height;
-        overlay.dataset.locationId = locationId;
-        overlay.title = location.name; // Show name on hover
-
-        overlay.addEventListener('click', (e) => {
-            if (isDragging) {
-                isDragging = false;
-                return;
-            }
+        overlay.addEventListener('click', () => {
+            playClickSound();
             showLocationDetail(locationId);
         });
 
-        overlay.addEventListener('mousedown', dragStart);
+        // The name label
+        const nameLabel = document.createElement('div');
+        nameLabel.className = 'location-name-label';
+        nameLabel.textContent = location.name;
 
-        overlayContainer.appendChild(overlay);
+        locationSpot.appendChild(overlay);
+        locationSpot.appendChild(nameLabel);
+        overlayContainer.appendChild(locationSpot);
     }
 }
 
 function showLocationDetail(locationId) {
+    currentLocationId = locationId;
     const location = LOCATIONS[locationId];
     if (!location) return;
 
-    showScreen('location-detail'); // A new case for showScreen
+    // --- New Animation Logic ---
 
+    // 1. Prepare the detail screen content
     const locationName = document.getElementById('location-name');
     const detailMap = document.getElementById('location-detail-map');
     const actionsContainer = document.getElementById('location-actions');
-
-    locationName.textContent = location.name;
-
     if (location.detailMap) {
         detailMap.src = location.detailMap;
-        detailMap.style.display = 'block';
-    } else {
-        detailMap.style.display = 'none';
     }
-
     actionsContainer.innerHTML = '';
     location.actions.forEach(action => {
         const actionButton = document.createElement('button');
@@ -384,54 +518,59 @@ function showLocationDetail(locationId) {
         actionButton.textContent = action.replace('_', ' ');
         actionsContainer.appendChild(actionButton);
     });
+
+    // 2. Hide overlays and show title
+    ui.locationOverlayContainer.classList.remove('active');
+    ui.locationOverlayContainer.style.display = 'none';
+    ui.locationTitleDisplay.textContent = location.name;
+    ui.locationTitleDisplay.style.opacity = 1;
+
+    // 3. Trigger the opening animation
+    const mapLeft = document.getElementById('world-map-left');
+    const mapRight = document.getElementById('world-map-right');
+    mapLeft.classList.add('split');
+    mapRight.classList.add('split');
+
+    // 4. After the animation, show the detail screen and send map to back
+    setTimeout(() => {
+        ui.locationDetailScreen.style.display = 'block';
+        ui.worldMapWrapper.style.zIndex = 0;
+    }, 800); // Must match animation duration
 }
 
-let activeOverlay = null;
-let offsetX = 0;
-let offsetY = 0;
-let isDragging = false;
+async function loadGame(fileName) {
+    try {
+        // We get the filename with .json, but the API needs it without
+        const saveName = fileName.replace('.json', '');
+        const response = await fetch(`/api/gamesaves/${saveName}`);
+        if (!response.ok) {
+            throw new Error(`Failed to load game: ${saveName}`);
+        }
+        const saveData = await response.json();
 
-function dragStart(e) {
-    isDragging = false;
-    activeOverlay = e.target;
-    offsetX = e.clientX - activeOverlay.getBoundingClientRect().left;
-    offsetY = e.clientY - activeOverlay.getBoundingClientRect().top;
-    activeOverlay.classList.add('dragging');
-}
+        // Load main character data into localStorage
+        localStorage.setItem('selectedCharacter', JSON.stringify(saveData.character));
 
-function drag(e) {
-    if (!activeOverlay) return;
-    isDragging = true;
-    e.preventDefault();
-    const parentRect = activeOverlay.parentElement.getBoundingClientRect();
-    const x = e.clientX - parentRect.left - offsetX;
-    const y = e.clientY - parentRect.top - offsetY;
-    activeOverlay.style.left = `${x}px`;
-    activeOverlay.style.top = `${y}px`;
-}
+        // Load NPC party
+        npcParty = saveData.party || [null, null, null];
 
-function dragEnd(e) {
-    if (!activeOverlay) return;
+        // Load current location
+        currentLocationId = saveData.location || null;
 
-    const overlayContainer = document.getElementById('location-overlay-container');
-    const containerRect = overlayContainer.getBoundingClientRect();
-    const overlayRect = activeOverlay.getBoundingClientRect();
+        // Refresh the game screen with the loaded data
+        if (ui.gameScreen.style.display !== 'flex') {
+            showScreen('game');
+        } else {
+            setupGameScreen();
+        }
 
-    const top = ((overlayRect.top - containerRect.top) / containerRect.height) * 100;
-    const left = ((overlayRect.left - containerRect.left) / containerRect.width) * 100;
+        console.log('Game loaded successfully:', saveData);
+        ui.loadGameModal.style.display = 'none'; // Close modal on success
 
-    const locationId = activeOverlay.dataset.locationId;
-    const locationName = LOCATIONS[locationId].name;
-
-    // Update the in-memory LOCATIONS object
-    LOCATIONS[locationId].coords.top = `${top.toFixed(2)}%`;
-    LOCATIONS[locationId].coords.left = `${left.toFixed(2)}%`;
-
-    const display = document.getElementById('coordinate-display');
-    display.innerHTML = `<strong>${locationName}:</strong><br>top: '${top.toFixed(2)}%', left: '${left.toFixed(2)}%'`;
-
-    activeOverlay.classList.remove('dragging');
-    activeOverlay = null;
+    } catch (error) {
+        console.error('Error in loadGame:', error);
+        alert('Fehler beim Laden des Spiels.');
+    }
 }
 
 

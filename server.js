@@ -101,6 +101,34 @@ app.get('/api/gamesaves/:name', (req, res) => {
     });
 });
 
+// POST: Save RPG Map Configuration
+app.post('/api/rpg/mapconfig', (req, res) => {
+    try {
+        const mapConfigData = req.body;
+        if (!mapConfigData || Object.keys(mapConfigData).length === 0) {
+            return res.status(400).json({ message: 'Invalid map configuration data.' });
+        }
+
+        const filePath = path.join(__dirname, 'public', 'games', 'rpg', 'map_config.js');
+
+        // Construct the file content as a JavaScript file
+        const fileContent = `const MAP_CONFIG = ${JSON.stringify(mapConfigData, null, 4)};\n`;
+
+        fs.writeFile(filePath, fileContent, 'utf8', (err) => {
+            if (err) {
+                console.error('Error writing map config file:', err);
+                return res.status(500).json({ message: 'Error writing map config file to disk.' });
+            }
+            res.status(200).json({ message: 'Map configuration saved successfully.' });
+        });
+
+    } catch (error) {
+        console.error('[API /api/rpg/mapconfig] A critical error occurred:', error);
+        res.status(500).json({ message: 'A critical server error occurred during save.', error: error.message });
+    }
+});
+
+
 // --- Helper to send full user data ---
 function emitUserData(socketOrUsername, user) {
     if (!user) return; // Safety check

@@ -28,15 +28,15 @@
     "email": "c_dittrich@gmx.de",
     "password": "$2b$10$jv1/4CW4Rqn3WOBKUfCss.P0qSPEVk5CMo3q805wYqHgQ1Hl827/O",
     "resources": {
-      "gold": 398,
-      "holz": 509,
-      "erz": 508,
-      "kristall": 460
+      "gold": 456,
+      "holz": 568,
+      "erz": 566,
+      "kristall": 518
     },
     "unlockedGames": [
       "space-shooter"
     ],
-    "lastLogin": "2025-08-15T14:12:26.885Z",
+    "lastLogin": "2025-08-15T21:24:17.952Z",
     "createdAt": "2025-08-08T09:47:25.858Z",
     "isOnline": false,
     "isAdmin": false,
@@ -49,8 +49,8 @@
       "intelligence": 5
     },
     "selectedCharacter": {
-      "name": "Petra",
-      "image": "/images/RPG/Magierin.png",
+      "name": "Simone",
+      "image": "/images/RPG/Charakter/Magier_w.png",
       "stats": {
         "strength": 2,
         "dexterity": 5,

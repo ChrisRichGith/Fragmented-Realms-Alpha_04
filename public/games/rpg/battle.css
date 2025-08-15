@@ -34,6 +34,65 @@ body, html {
     align-items: center;
     padding: 20px;
     box-sizing: border-box;
+    position: relative; /* This is crucial for positioning the drop zones */
+}
+
+.drop-zone {
+    position: absolute;
+    width: 130px; /* A bit larger than the item */
+    height: 130px;
+    border: 3px dashed rgba(255, 255, 255, 0.5);
+    background-color: rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.drop-zone.drag-over {
+    background-color: rgba(0, 255, 0, 0.3);
+    border-color: rgba(173, 255, 47, 0.8);
+}
+
+.drop-zone .tactic-item {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.drop-zone .tactic-item img {
+    cursor: default; /* Change cursor back when item is placed */
+}
+
+/* --- Styles for Edit Mode --- */
+
+#save-coords-button {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    z-index: 100;
+    padding: 10px 20px;
+    background-color: #c9b037;
+    color: #2c1e10;
+    border: 2px solid #8a6d4f;
+    border-radius: 5px;
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    display: none; /* Hidden by default */
+}
+
+#save-coords-button:hover {
+    background-color: #f5eacb;
+}
+
+.drop-zone.edit-mode {
+    cursor: move;
+    border-style: solid;
+    border-color: #f5eacb;
+    box-shadow: 0 0 10px 3px rgba(255, 235, 179, 0.7);
 }
 
 #battle-map {
@@ -54,6 +113,11 @@ body, html {
     width: 100%;
 }
 
+#player-character-card {
+    display: flex;
+    justify-content: center;
+}
+
 #npc-character-cards {
     display: flex;
     flex-direction: column;
@@ -62,22 +126,65 @@ body, html {
 }
 
 .char-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     border: 2px solid #8a6d4f;
     background: rgba(40, 30, 30, 0.85);
-    padding: 15px;
+    padding: 10px;
     margin-bottom: 10px;
-    text-align: center;
-    width: 80%;
+    width: 95%; /* Make card wider */
+    box-sizing: border-box;
 }
 
 .char-card img {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
+    width: 80px;  /* Slightly smaller image */
+    height: 80px;
+    object-fit: cover;
+    object-position: center 15%; /* Shifts the image down to prevent cutting off the top */
+    border: 2px solid #c9b037;
+}
+
+.char-card-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .char-card h3 {
-    margin: 10px 0 5px 0;
+    margin: 0 0 5px 0;
+    font-size: 1.1em;
+}
+
+.char-drop-zone {
+    width: 90px;
+    height: 90px;
+    border: 2px dashed rgba(255, 255, 255, 0.4);
+    background-color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0; /* Prevent the zone from shrinking */
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.char-drop-zone.drag-over {
+    background-color: rgba(0, 255, 0, 0.3);
+    border-color: rgba(173, 255, 47, 0.8);
+}
+
+.char-drop-zone .tactic-item {
+    width: 100%;
+    height: 100%;
+    padding: 5px; /* Add some padding for the contained item */
+    box-sizing: border-box;
+}
+
+.char-drop-zone .tactic-item img {
+    width: 100%;
+    height: 100%;
+    border: none; /* Remove border from item image inside drop zone */
+    cursor: default;
 }
 
 #tactic-items {

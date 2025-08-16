@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     let currentMap = '';
     let MAP_CONFIG_EDITABLE = {};
+    let battleCharacters = []; // Holds the state of all characters in the battle
 
     // --- DOM Elements ---
     const playerCardContainer = document.getElementById('player-character-card');
@@ -108,18 +109,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CHARACTER CARD FUNCTIONS ---
 
-    function createCharacterCard(characterData, isPlayer = false) {
-        if (!characterData) return null;
+    function createCharacterCard(characterId) {
+        const character = battleCharacters.find(c => c.id === characterId);
+        if (!character) return null;
 
-        const hp = characterData.hp ?? Math.floor(Math.random() * 80) + 20;
-        const maxHp = characterData.maxHp ?? 100;
-        const mana = characterData.mana ?? Math.floor(Math.random() * 60) + 40;
-        const maxMana = characterData.maxMana ?? 100;
+        const { data, isPlayer } = character;
+        const hp = data.hp ?? Math.floor(Math.random() * 80) + 20;
+        const maxHp = data.maxHp ?? 100;
+        const mana = data.mana ?? Math.floor(Math.random() * 60) + 40;
+        const maxMana = data.maxMana ?? 100;
 
         const card = document.createElement('div');
-        const name = characterData.name || 'Unknown';
+        const name = data.name || 'Unknown';
 
-        // Health and Mana Bar creation logic (reusable)
         const createStatBar = (current, max, type) => {
             const container = document.createElement('div');
             container.className = 'stat-bar-container';
@@ -137,8 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return container;
         };
 
-        // Drop zone creation logic (reusable)
-        const createDropZone = () => {
+        const createDropZone = (charId) => {
             const dropZone = document.createElement('div');
             dropZone.className = 'char-drop-zone';
             dropZone.addEventListener('dragover', (e) => {
@@ -149,11 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
             dropZone.addEventListener('drop', (e) => {
                 e.preventDefault();
                 dropZone.classList.remove('drag-over');
-                const itemId = e.dataTransfer.getData('text/plain');
-                const itemElement = document.getElementById(itemId);
+                const droppedItemId = e.dataTransfer.getData('text/plain');
+                const itemElement = document.getElementById(droppedItemId);
                 if (itemElement && dropZone.childElementCount === 0) {
                     playSound('/Sounds/RPG/Drag_rev.mp3');
                     dropZone.appendChild(itemElement);
+                    applyItemBuff(charId, itemElement.querySelector('img').alt);
                 }
             });
             return dropZone;
@@ -161,7 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isPlayer) {
             card.className = 'char-card';
-
             const infoDiv = document.createElement('div');
             infoDiv.className = 'char-card-info';
             const nameHeader = document.createElement('h3');
@@ -170,12 +171,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const topSection = document.createElement('div');
             topSection.className = 'char-top-section';
-            const imageSrc = characterData.image || '/images/RPG/Charakter/male_silhouette.svg';
+            const imageSrc = data.image || '/images/RPG/Charakter/male_silhouette.svg';
             const img = document.createElement('img');
             img.src = imageSrc;
             img.alt = name;
             topSection.appendChild(img);
-            topSection.appendChild(createDropZone());
+            topSection.appendChild(createDropZone(characterId));
 
             const statsContainer = document.createElement('div');
             statsContainer.className = 'char-stats-container';
@@ -186,43 +187,71 @@ document.addEventListener('DOMContentLoaded', () => {
             card.appendChild(topSection);
             card.appendChild(statsContainer);
         } else {
-            // New compact NPC card
             card.className = 'npc-card';
-
             const infoSection = document.createElement('div');
             infoSection.className = 'npc-info-section';
-
             const classHeader = document.createElement('h4');
             classHeader.className = 'npc-class';
-            classHeader.textContent = characterData.class || name; // Fallback to name if class is not available
-
+            classHeader.textContent = data.class || name;
             const statsContainer = document.createElement('div');
             statsContainer.className = 'npc-stats-container';
             statsContainer.appendChild(createStatBar(hp, maxHp, 'health'));
             statsContainer.appendChild(createStatBar(mana, maxMana, 'mana'));
-
             infoSection.appendChild(classHeader);
             infoSection.appendChild(statsContainer);
-
             card.appendChild(infoSection);
-            card.appendChild(createDropZone());
+            card.appendChild(createDropZone(characterId));
+        }
+        return card;
+    }
+
+    function applyItemBuff(characterId, itemName) {
+        const character = battleCharacters.find(c => c.id === characterId);
+        const item = TACTIC_ITEMS[itemName];
+
+        if (!character || !item) {
+            console.error("Character or item not found for buff application.");
+            return;
         }
 
-        return card;
+        console.log(`Applying buff from item "${itemName}" to character "${character.data.name}".`);
+
+        // This is a placeholder for the actual buff logic.
+        // For now, we will just log the intended effects.
+        item.effects.forEach(effect => {
+            if (effect.class === 'All' || effect.class === character.data.class) {
+                console.log(`  - Effect applies to class: ${character.data.class}`);
+                if (effect.ability) {
+                    console.log(`    - Modifying ability: ${effect.ability}`);
+                    console.log(`    - Property: ${effect.property}, Modifier: ${effect.modifier.type} ${effect.modifier.value}`);
+                } else {
+                    console.log(`    - Modifying global stat: ${effect.property}`);
+                    console.log(`    - Modifier: ${effect.modifier.type} ${effect.modifier.value}`);
+                }
+                // Here you would apply the change to a temporary copy of the character data
+            }
+        });
     }
 
     function displayCharacters() {
         playerCardContainer.innerHTML = '';
         npcCardsContainer.innerHTML = '';
+        battleCharacters = []; // Reset the battle characters array
+
         const playerCharData = JSON.parse(localStorage.getItem('selectedCharacter'));
         if (playerCharData) {
-            const playerCard = createCharacterCard(playerCharData, true); // isPlayer = true
+            const playerId = `player-${Date.now()}`;
+            battleCharacters.push({ id: playerId, data: playerCharData, isPlayer: true, buffs: [] });
+            const playerCard = createCharacterCard(playerId);
             if (playerCard) playerCardContainer.appendChild(playerCard);
         }
+
         const npcPartyData = JSON.parse(localStorage.getItem('npcParty')) || [];
-        npcPartyData.forEach(npcData => {
+        npcPartyData.forEach((npcData, index) => {
             if (npcData) {
-                const npcCard = createCharacterCard(npcData, false); // isPlayer = false
+                const npcId = `npc-${index}-${Date.now()}`;
+                battleCharacters.push({ id: npcId, data: npcData, isPlayer: false, buffs: [] });
+                const npcCard = createCharacterCard(npcId);
                 if (npcCard) npcCardsContainer.appendChild(npcCard);
             }
         });

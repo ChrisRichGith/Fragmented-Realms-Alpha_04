@@ -530,6 +530,24 @@ input[type=range]::-moz-range-thumb {
     font-size: 1.1em;
 }
 
+#existing-saves-container {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #8a6d4f;
+    padding: 10px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+
+.existing-save-item {
+    padding: 5px;
+    border-bottom: 1px solid #6d4c41;
+}
+
+.existing-save-item:last-child {
+    border-bottom: none;
+}
+
 #char-name-input {
     width: 100%;
     box-sizing: border-box;

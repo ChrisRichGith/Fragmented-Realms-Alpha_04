@@ -414,8 +414,10 @@ function setupGameScreen() {
 
     if (!charData) {
         charCardContainer.innerHTML = '<p>Kein Charakter ausgewählt. Bitte erstelle einen Charakter.</p>';
+        ui.savePartyBtn.disabled = true; // Disable save if no character
         return;
     }
+    ui.savePartyBtn.disabled = false; // Enable save if character exists
 
     charCardContainer.innerHTML = `
         <div class="character-card-game">

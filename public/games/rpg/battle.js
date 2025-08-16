@@ -110,40 +110,95 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function createCharacterCard(characterData) {
         if (!characterData) return null;
+
+        const hp = characterData.hp ?? Math.floor(Math.random() * 80) + 20;
+        const maxHp = characterData.maxHp ?? 100;
+        const mana = characterData.mana ?? Math.floor(Math.random() * 60) + 40;
+        const maxMana = characterData.maxMana ?? 100;
+
         const card = document.createElement('div');
         card.className = 'char-card';
+
+        // Name
         const name = characterData.name || 'Unknown';
-        const imageSrc = characterData.image || '/images/RPG/Charakter/male_silhouette.svg';
-        const img = document.createElement('img');
-        img.src = imageSrc;
-        img.alt = name;
         const infoDiv = document.createElement('div');
         infoDiv.className = 'char-card-info';
         const nameHeader = document.createElement('h3');
         nameHeader.textContent = name;
         infoDiv.appendChild(nameHeader);
+
+        // Top Section (Image + Drop Zone)
+        const topSection = document.createElement('div');
+        topSection.className = 'char-top-section';
+
+        const imageSrc = characterData.image || '/images/RPG/Charakter/male_silhouette.svg';
+        const img = document.createElement('img');
+        img.src = imageSrc;
+        img.alt = name;
+
         const dropZone = document.createElement('div');
         dropZone.className = 'char-drop-zone';
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             dropZone.classList.add('drag-over');
         });
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('drag-over');
-        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('drag-over');
             const itemId = e.dataTransfer.getData('text/plain');
             const itemElement = document.getElementById(itemId);
             if (itemElement && dropZone.childElementCount === 0) {
-                playSound('/Sounds/RPG/Drag_rev.mp3'); // Play sound on drop
+                playSound('/Sounds/RPG/Drag_rev.mp3');
                 dropZone.appendChild(itemElement);
             }
         });
-        card.appendChild(img);
+
+        topSection.appendChild(img);
+        topSection.appendChild(dropZone);
+
+        // Stats Container (Health + Mana bars)
+        const statsContainer = document.createElement('div');
+        statsContainer.className = 'char-stats-container';
+
+        // Health Bar
+        const healthBarContainer = document.createElement('div');
+        healthBarContainer.className = 'stat-bar-container';
+        const healthBar = document.createElement('div');
+        healthBar.className = 'stat-bar';
+        const healthBarFill = document.createElement('div');
+        healthBarFill.className = 'health-bar';
+        healthBarFill.style.width = `${(hp / maxHp) * 100}%`;
+        const healthValue = document.createElement('span');
+        healthValue.className = 'stat-value';
+        healthValue.textContent = `${hp} / ${maxHp}`;
+        healthBar.appendChild(healthBarFill);
+        healthBarContainer.appendChild(healthBar);
+        healthBarContainer.appendChild(healthValue);
+
+        // Mana Bar
+        const manaBarContainer = document.createElement('div');
+        manaBarContainer.className = 'stat-bar-container';
+        const manaBar = document.createElement('div');
+        manaBar.className = 'stat-bar';
+        const manaBarFill = document.createElement('div');
+        manaBarFill.className = 'mana-bar';
+        manaBarFill.style.width = `${(mana / maxMana) * 100}%`;
+        const manaValue = document.createElement('span');
+        manaValue.className = 'stat-value';
+        manaValue.textContent = `${mana} / ${maxMana}`;
+        manaBar.appendChild(manaBarFill);
+        manaBarContainer.appendChild(manaBar);
+        manaBarContainer.appendChild(manaValue);
+
+        statsContainer.appendChild(healthBarContainer);
+        statsContainer.appendChild(manaBarContainer);
+
+        // Assemble the card
         card.appendChild(infoDiv);
-        card.appendChild(dropZone);
+        card.appendChild(topSection);
+        card.appendChild(statsContainer);
+
         return card;
     }
 

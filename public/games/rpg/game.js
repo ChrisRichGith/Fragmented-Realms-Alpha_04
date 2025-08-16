@@ -240,7 +240,30 @@ function setupEventListeners() {
             }, 20);
         }, 800); // Must match animation duration
     });
-    ui.savePartyBtn.addEventListener('click', () => {
+    ui.savePartyBtn.addEventListener('click', async () => {
+        try {
+            const response = await fetch('/api/gamesaves');
+            const saveFiles = await response.json();
+
+            const container = document.getElementById('existing-saves-container');
+            container.innerHTML = ''; // Clear old list
+
+            if (saveFiles.length === 0) {
+                container.innerHTML = '<p>Noch keine Spielstände vorhanden.</p>';
+            } else {
+                const list = document.createElement('ul');
+                saveFiles.forEach(file => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'existing-save-item';
+                    listItem.textContent = file.replace('.json', '');
+                    list.appendChild(listItem);
+                });
+                container.appendChild(list);
+            }
+        } catch (error) {
+            console.error('Could not fetch existing saves:', error);
+            document.getElementById('existing-saves-container').innerHTML = '<p>Fehler beim Laden der Spielstände.</p>';
+        }
         ui.saveGameModal.style.display = 'flex';
     });
     ui.exitBtn.addEventListener('click', () => {
@@ -311,22 +334,27 @@ function setupEventListeners() {
         ui.loadGameModal.style.display = 'none';
     });
     ui.confirmSaveBtn.addEventListener('click', async () => {
-        const saveName = ui.saveNameInput.value.trim();
-        if (saveName.length < 3 || !/^[a-zA-Z0-9_ -]+$/.test(saveName)) {
+        const baseName = ui.saveNameInput.value.trim();
+        if (baseName.length < 3 || !/^[a-zA-Z0-9_ -]+$/.test(baseName)) {
              alert('Bitte gib einen gültigen Namen mit mindestens 3 Zeichen ein (nur Buchstaben, Zahlen, Leerzeichen, _ und -).');
             return;
         }
 
         const charData = JSON.parse(localStorage.getItem('selectedCharacter'));
 
-        // Robustness check: Ensure character data exists before saving.
         if (!charData) {
             alert('Fehler: Kein Charakter zum Speichern ausgewählt. Bitte erstelle zuerst einen Charakter.');
             return;
         }
 
+        // Create a timestamp
+        const now = new Date();
+        const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}`;
+
+        const finalSaveName = `${baseName}_${timestamp}`;
+
         const saveData = {
-            name: saveName,
+            name: finalSaveName, // Send the final name to the server
             character: charData,
             party: npcParty,
             location: currentLocationId

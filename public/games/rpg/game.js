@@ -790,8 +790,8 @@ function populateCharacterCreation() {
             <p>${classData.description}</p>
             ${statsHtml}
             <div class="gender-selector">
-                <button class="gender-btn active" data-gender="male">Männlich</button>
-                <button class="gender-btn" data-gender="female">Weiblich</button>
+                <button class="gender-btn active" data-gender="male"><img src="/images/RPG/Charakter/M.png" alt="Männlich"></button>
+                <button class="gender-btn" data-gender="female"><img src="/images/RPG/Charakter/F.png" alt="Weiblich"></button>
             </div>
         `;
 
@@ -828,8 +828,8 @@ function populateCharacterCreation() {
         <h3>Eigener Charakter</h3>
         <p>Erstelle einen Charakter mit frei verteilbaren Attributpunkten.</p>
         <div class="gender-selector">
-            <button class="gender-btn active" data-gender="male">Männlich</button>
-            <button class="gender-btn" data-gender="female">Weiblich</button>
+            <button class="gender-btn active" data-gender="male"><img src="/images/RPG/Charakter/M.png" alt="Männlich"></button>
+            <button class="gender-btn" data-gender="female"><img src="/images/RPG/Charakter/F.png" alt="Weiblich"></button>
         </div>
     `;
     customCard.addEventListener('click', () => {

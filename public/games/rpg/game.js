@@ -745,38 +745,33 @@ function handleConfirmPredefName() {
         alert('Bitte gib einen Namen mit mindestens 3 Zeichen ein.');
         return;
     }
-
     if (!namingContext) return;
 
     const { classData, card } = namingContext;
+    const selectedGender = card.dataset.gender;
     const charData = {
         name: charName,
-        image: classData.img[card.dataset.gender],
-        stats: classData.stats
+        class: classData.name,
+        image: classData.img[selectedGender],
+        stats: classData.stats,
+        gender: selectedGender
     };
 
-    if (window.opener) {
-        window.opener.postMessage({ type: 'character-selected', data: charData }, '*');
-    } else {
-        alert('Hauptfenster nicht gefunden. Charakterauswahl kann nicht gesendet werden.');
-    }
-
+    localStorage.setItem('selectedCharacter', JSON.stringify(charData));
+    alert(`${charData.name} wurde ausgewählt!`);
     closeNameCharModal();
 }
 
 
 function populateCharacterCreation() {
     const container = document.getElementById('character-cards-container');
-    container.innerHTML = ''; // Clear previous cards
+    container.innerHTML = '';
 
-    // Dynamically create class cards from RPG_CLASSES
-    for (const className in RPG_CLASSES) {
-        const classData = RPG_CLASSES[className];
-
+    const createClassCard = (className, classData) => {
         const card = document.createElement('div');
         card.className = 'character-card';
         card.dataset.gender = 'male';
-        card.dataset.className = className; // Store class name
+        card.dataset.className = className;
 
         let statsHtml = '';
         if (classData.stats) {
@@ -798,13 +793,12 @@ function populateCharacterCreation() {
                 <button class="gender-btn active" data-gender="male">Männlich</button>
                 <button class="gender-btn" data-gender="female">Weiblich</button>
             </div>
-            <button class="btn-apply-char">Übernehmen</button>
         `;
 
         card.addEventListener('click', () => {
             document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
-            ui.startGameBtn.disabled = false;
+            openNameCharModal(className, card);
         });
 
         const genderButtons = card.querySelectorAll('.gender-btn');
@@ -819,13 +813,15 @@ function populateCharacterCreation() {
             });
         });
 
-        container.appendChild(card);
+        return card;
+    };
+
+    for (const className in RPG_CLASSES) {
+        container.appendChild(createClassCard(className, RPG_CLASSES[className]));
     }
 
-    // Add the custom character card separately
     const customCard = document.createElement('div');
     customCard.className = 'character-card';
-    customCard.dataset.gender = 'male';
     customCard.dataset.iscustom = 'true';
     customCard.innerHTML = `
         <img src="/images/RPG/Charakter/male_silhouette.svg" alt="Eigener Charakter">
@@ -835,49 +831,13 @@ function populateCharacterCreation() {
             <button class="gender-btn active" data-gender="male">Männlich</button>
             <button class="gender-btn" data-gender="female">Weiblich</button>
         </div>
-        <button class="btn-apply-char">Erstellen</button>
     `;
-    customCard.addEventListener('click', openCustomCharModal);
-    const customGenderButtons = customCard.querySelectorAll('.gender-btn');
-    customGenderButtons.forEach(button => {
-        button.addEventListener('click', (event) => {
-            event.stopPropagation();
-            const selectedGender = button.dataset.gender;
-            customCard.dataset.gender = selectedGender;
-            customCard.querySelector('.gender-btn.active').classList.remove('active');
-            button.classList.add('active');
-            const imgElement = customCard.querySelector('img');
-            imgElement.src = selectedGender === 'male' ? '/images/RPG/Charakter/male_silhouette.svg' : '/images/RPG/Charakter/female_silhouette.svg';
-        });
+    customCard.addEventListener('click', () => {
+        document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
+        customCard.classList.add('selected');
+        openCustomCharModal();
     });
     container.appendChild(customCard);
-
-
-    // Universal "Apply" button logic
-    document.querySelectorAll('.btn-apply-char').forEach(applyBtn => {
-        applyBtn.addEventListener('click', (event) => {
-            event.stopPropagation();
-            const card = applyBtn.closest('.character-card');
-            if (card.dataset.iscustom === 'true') {
-                if (!customCharState.name) {
-                    alert('Bitte erstelle zuerst deinen Charakter über das Modal.');
-                    openCustomCharModal();
-                    return;
-                }
-                const charData = {
-                    name: customCharState.name,
-                    class: 'Custom',
-                    image: card.querySelector('img').src,
-                    stats: customCharState.stats,
-                    gender: card.dataset.gender
-                };
-                localStorage.setItem('selectedCharacter', JSON.stringify(charData));
-                alert(`${charData.name} wurde ausgewählt!`);
-            } else {
-                openNameCharModal(card.dataset.className, card);
-            }
-        });
-    });
 }
 
 

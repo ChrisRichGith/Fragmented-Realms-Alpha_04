@@ -766,7 +766,7 @@ function handleConfirmCustomChar() {
 
     if (window.opener) {
         window.opener.postMessage({ type: 'character-selected', data: charData }, '*');
-        window.close();
+        // window.close(); // Removed as per user request
     } else {
         localStorage.setItem('selectedCharacter', JSON.stringify(charData));
         if (customCard) {
@@ -815,7 +815,7 @@ function handleConfirmPredefName() {
 
     if (window.opener) {
         window.opener.postMessage({ type: 'character-selected', data: charData }, '*');
-        window.close(); // Close the popup after sending the data
+        // window.close(); // Removed as per user request
     } else {
         // Fallback for when the page is not opened as a popup
         localStorage.setItem('selectedCharacter', JSON.stringify(charData));

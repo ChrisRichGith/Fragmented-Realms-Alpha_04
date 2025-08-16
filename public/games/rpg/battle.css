@@ -25,6 +25,7 @@ body, html {
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow-y: auto; /* Make panel scrollable if content overflows */
 }
 
 #center-panel {
@@ -273,4 +274,52 @@ body, html {
 
 .tactic-item img:active {
     cursor: grabbing;
+}
+
+/* --- NPC Card Specific Styles --- */
+.npc-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 1px solid #8a6d4f;
+    background: rgba(40, 30, 30, 0.85);
+    padding: 8px;
+    width: 95%; /* Match player card width for alignment */
+    box-sizing: border-box;
+    margin: 0 auto; /* Center it in the container */
+}
+
+.npc-info-section {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.npc-class {
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #f5eacb;
+}
+
+.npc-card .stat-bar-container {
+    gap: 5px; /* Tighter gap */
+}
+
+.npc-card .stat-bar {
+    height: 12px; /* Shorter bars */
+}
+
+.npc-card .stat-value {
+    font-size: 0.85em;
+    min-width: 45px;
+}
+
+/* Use the existing drop-zone class, it will be a child of npc-card */
+.npc-card .char-drop-zone {
+    width: 60px; /* Same size as player's for consistency */
+    height: 60px;
+    flex-shrink: 0;
 }

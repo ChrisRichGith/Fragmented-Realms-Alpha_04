@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CHARACTER CARD FUNCTIONS ---
 
-    function createCharacterCard(characterData) {
+    function createCharacterCard(characterData, isPlayer = false) {
         if (!characterData) return null;
 
         const hp = characterData.hp ?? Math.floor(Math.random() * 80) + 20;
@@ -117,87 +117,96 @@ document.addEventListener('DOMContentLoaded', () => {
         const maxMana = characterData.maxMana ?? 100;
 
         const card = document.createElement('div');
-        card.className = 'char-card';
-
-        // Name
         const name = characterData.name || 'Unknown';
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'char-card-info';
-        const nameHeader = document.createElement('h3');
-        nameHeader.textContent = name;
-        infoDiv.appendChild(nameHeader);
 
-        // Top Section (Image + Drop Zone)
-        const topSection = document.createElement('div');
-        topSection.className = 'char-top-section';
+        // Health and Mana Bar creation logic (reusable)
+        const createStatBar = (current, max, type) => {
+            const container = document.createElement('div');
+            container.className = 'stat-bar-container';
+            const bar = document.createElement('div');
+            bar.className = 'stat-bar';
+            const fill = document.createElement('div');
+            fill.className = `${type}-bar`;
+            fill.style.width = `${(current / max) * 100}%`;
+            const value = document.createElement('span');
+            value.className = 'stat-value';
+            value.textContent = `${current} / ${max}`;
+            bar.appendChild(fill);
+            container.appendChild(bar);
+            container.appendChild(value);
+            return container;
+        };
 
-        const imageSrc = characterData.image || '/images/RPG/Charakter/male_silhouette.svg';
-        const img = document.createElement('img');
-        img.src = imageSrc;
-        img.alt = name;
+        // Drop zone creation logic (reusable)
+        const createDropZone = () => {
+            const dropZone = document.createElement('div');
+            dropZone.className = 'char-drop-zone';
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                const itemId = e.dataTransfer.getData('text/plain');
+                const itemElement = document.getElementById(itemId);
+                if (itemElement && dropZone.childElementCount === 0) {
+                    playSound('/Sounds/RPG/Drag_rev.mp3');
+                    dropZone.appendChild(itemElement);
+                }
+            });
+            return dropZone;
+        };
 
-        const dropZone = document.createElement('div');
-        dropZone.className = 'char-drop-zone';
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('drag-over');
-        });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('drag-over');
-            const itemId = e.dataTransfer.getData('text/plain');
-            const itemElement = document.getElementById(itemId);
-            if (itemElement && dropZone.childElementCount === 0) {
-                playSound('/Sounds/RPG/Drag_rev.mp3');
-                dropZone.appendChild(itemElement);
-            }
-        });
+        if (isPlayer) {
+            card.className = 'char-card';
 
-        topSection.appendChild(img);
-        topSection.appendChild(dropZone);
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'char-card-info';
+            const nameHeader = document.createElement('h3');
+            nameHeader.textContent = name;
+            infoDiv.appendChild(nameHeader);
 
-        // Stats Container (Health + Mana bars)
-        const statsContainer = document.createElement('div');
-        statsContainer.className = 'char-stats-container';
+            const topSection = document.createElement('div');
+            topSection.className = 'char-top-section';
+            const imageSrc = characterData.image || '/images/RPG/Charakter/male_silhouette.svg';
+            const img = document.createElement('img');
+            img.src = imageSrc;
+            img.alt = name;
+            topSection.appendChild(img);
+            topSection.appendChild(createDropZone());
 
-        // Health Bar
-        const healthBarContainer = document.createElement('div');
-        healthBarContainer.className = 'stat-bar-container';
-        const healthBar = document.createElement('div');
-        healthBar.className = 'stat-bar';
-        const healthBarFill = document.createElement('div');
-        healthBarFill.className = 'health-bar';
-        healthBarFill.style.width = `${(hp / maxHp) * 100}%`;
-        const healthValue = document.createElement('span');
-        healthValue.className = 'stat-value';
-        healthValue.textContent = `${hp} / ${maxHp}`;
-        healthBar.appendChild(healthBarFill);
-        healthBarContainer.appendChild(healthBar);
-        healthBarContainer.appendChild(healthValue);
+            const statsContainer = document.createElement('div');
+            statsContainer.className = 'char-stats-container';
+            statsContainer.appendChild(createStatBar(hp, maxHp, 'health'));
+            statsContainer.appendChild(createStatBar(mana, maxMana, 'mana'));
 
-        // Mana Bar
-        const manaBarContainer = document.createElement('div');
-        manaBarContainer.className = 'stat-bar-container';
-        const manaBar = document.createElement('div');
-        manaBar.className = 'stat-bar';
-        const manaBarFill = document.createElement('div');
-        manaBarFill.className = 'mana-bar';
-        manaBarFill.style.width = `${(mana / maxMana) * 100}%`;
-        const manaValue = document.createElement('span');
-        manaValue.className = 'stat-value';
-        manaValue.textContent = `${mana} / ${maxMana}`;
-        manaBar.appendChild(manaBarFill);
-        manaBarContainer.appendChild(manaBar);
-        manaBarContainer.appendChild(manaValue);
+            card.appendChild(infoDiv);
+            card.appendChild(topSection);
+            card.appendChild(statsContainer);
+        } else {
+            // New compact NPC card
+            card.className = 'npc-card';
 
-        statsContainer.appendChild(healthBarContainer);
-        statsContainer.appendChild(manaBarContainer);
+            const infoSection = document.createElement('div');
+            infoSection.className = 'npc-info-section';
 
-        // Assemble the card
-        card.appendChild(infoDiv);
-        card.appendChild(topSection);
-        card.appendChild(statsContainer);
+            const classHeader = document.createElement('h4');
+            classHeader.className = 'npc-class';
+            classHeader.textContent = characterData.class || name; // Fallback to name if class is not available
+
+            const statsContainer = document.createElement('div');
+            statsContainer.className = 'npc-stats-container';
+            statsContainer.appendChild(createStatBar(hp, maxHp, 'health'));
+            statsContainer.appendChild(createStatBar(mana, maxMana, 'mana'));
+
+            infoSection.appendChild(classHeader);
+            infoSection.appendChild(statsContainer);
+
+            card.appendChild(infoSection);
+            card.appendChild(createDropZone());
+        }
 
         return card;
     }
@@ -207,13 +216,13 @@ document.addEventListener('DOMContentLoaded', () => {
         npcCardsContainer.innerHTML = '';
         const playerCharData = JSON.parse(localStorage.getItem('selectedCharacter'));
         if (playerCharData) {
-            const playerCard = createCharacterCard(playerCharData);
+            const playerCard = createCharacterCard(playerCharData, true); // isPlayer = true
             if (playerCard) playerCardContainer.appendChild(playerCard);
         }
         const npcPartyData = JSON.parse(localStorage.getItem('npcParty')) || [];
         npcPartyData.forEach(npcData => {
             if (npcData) {
-                const npcCard = createCharacterCard(npcData);
+                const npcCard = createCharacterCard(npcData, false); // isPlayer = false
                 if (npcCard) npcCardsContainer.appendChild(npcCard);
             }
         });

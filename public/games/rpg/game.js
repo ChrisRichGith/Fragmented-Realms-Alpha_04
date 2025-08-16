@@ -689,34 +689,37 @@ function handleConfirmCustomChar() {
     }
 
     customCharState.name = charName;
-    console.log('Custom character created:', customCharState);
-
     const customCard = document.querySelector('.character-card[data-iscustom="true"]');
+    const selectedGender = customCard.dataset.gender;
+
+    let finalClass = 'Custom';
+    let finalImage = selectedGender === 'male' ? '/images/RPG/Charakter/male_silhouette.svg' : '/images/RPG/Charakter/female_silhouette.svg';
 
     // Check for secret class unlock
-    let unlockedClass = null;
     if (RPG_CLASSES['Arkaner Komponist']) {
         const secretClassData = RPG_CLASSES['Arkaner Komponist'];
-        const reqs = secretClassData.stats; // Assuming requirements are the base stats now
+        const reqs = secretClassData.stats;
         const stats = customCharState.stats;
-        if (stats.strength === reqs.strength &&
-            stats.dexterity === reqs.dexterity &&
-            stats.intelligence === reqs.intelligence) {
-            unlockedClass = secretClassData;
+        if (stats.strength === reqs.strength && stats.dexterity === reqs.dexterity && stats.intelligence === reqs.intelligence) {
+            finalClass = 'Arkaner Komponist';
+            finalImage = secretClassData.img[selectedGender];
+            alert('Herzlichen Glückwunsch: Du hast den Arkanen Komponisten freigeschaltet.');
         }
     }
 
+    const charData = {
+        name: customCharState.name,
+        class: finalClass,
+        image: finalImage,
+        stats: customCharState.stats,
+        gender: selectedGender
+    };
+
+    localStorage.setItem('selectedCharacter', JSON.stringify(charData));
+
     if (customCard) {
-        customCard.querySelector('h3').textContent = customCharState.name;
-
-        if (unlockedClass) {
-            alert('Herzlichen Glückwunsch: Du hast den Arkanen Komponisten freigeschaltet.');
-            const selectedGender = customCard.dataset.gender;
-            customCard.querySelector('img').src = unlockedClass.img[selectedGender];
-        }
-
-        customCard.querySelectorAll('.gender-btn').forEach(btn => btn.disabled = true);
-
+        customCard.querySelector('h3').textContent = charData.name;
+        customCard.querySelector('img').src = charData.image;
         document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
         customCard.classList.add('selected');
     }
@@ -760,6 +763,7 @@ function handleConfirmPredefName() {
     localStorage.setItem('selectedCharacter', JSON.stringify(charData));
     alert(`${charData.name} wurde ausgewählt!`);
     closeNameCharModal();
+    ui.startGameBtn.disabled = false;
 }
 
 

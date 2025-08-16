@@ -764,17 +764,21 @@ function handleConfirmCustomChar() {
         gender: selectedGender
     };
 
-    localStorage.setItem('selectedCharacter', JSON.stringify(charData));
-
-    if (customCard) {
-        customCard.querySelector('h3').textContent = charData.name;
-        customCard.querySelector('img').src = charData.image;
-        document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
-        customCard.classList.add('selected');
+    if (window.opener) {
+        window.opener.postMessage({ type: 'character-selected', data: charData }, '*');
+        window.close();
+    } else {
+        localStorage.setItem('selectedCharacter', JSON.stringify(charData));
+        if (customCard) {
+            customCard.querySelector('h3').textContent = charData.name;
+            customCard.querySelector('img').src = charData.image;
+            document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
+            customCard.classList.add('selected');
+        }
+        ui.startGameBtn.disabled = false;
     }
 
     closeCustomCharModal();
-    ui.startGameBtn.disabled = false;
 }
 
 // --- Naming Modal Functions ---
@@ -809,10 +813,17 @@ function handleConfirmPredefName() {
         gender: selectedGender
     };
 
-    localStorage.setItem('selectedCharacter', JSON.stringify(charData));
-    alert(`${charData.name} wurde ausgewählt!`);
+    if (window.opener) {
+        window.opener.postMessage({ type: 'character-selected', data: charData }, '*');
+        window.close(); // Close the popup after sending the data
+    } else {
+        // Fallback for when the page is not opened as a popup
+        localStorage.setItem('selectedCharacter', JSON.stringify(charData));
+        alert(`${charData.name} wurde ausgewählt!`);
+        ui.startGameBtn.disabled = false;
+    }
+
     closeNameCharModal();
-    ui.startGameBtn.disabled = false;
 }
 
 

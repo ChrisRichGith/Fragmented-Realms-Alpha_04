@@ -376,7 +376,7 @@ input[type=range]::-moz-range-thumb {
     flex-direction: column;
     align-items: center;
     width: 90%;
-    max-width: 1500px; /* Increased width to fit all cards */
+    max-width: 1600px; /* Further increased width to account for padding */
 }
 
 #character-creation-screen h2 {
@@ -681,6 +681,18 @@ input[type=range]::-moz-range-thumb {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    flex-grow: 1; /* Allow it to take available space */
+}
+
+.npc-card .gender-selector {
+    justify-content: flex-start; /* Align buttons to the left */
+    margin-top: 5px;
+    gap: 10px; /* Add space between buttons */
+}
+
+.npc-card .gender-btn {
+    width: 30px; /* Smaller buttons for the compact NPC card */
+    height: 30px;
 }
 
 .npc-card-details h4 {

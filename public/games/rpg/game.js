@@ -318,6 +318,13 @@ function setupEventListeners() {
         }
 
         const charData = JSON.parse(localStorage.getItem('selectedCharacter'));
+
+        // Robustness check: Ensure character data exists before saving.
+        if (!charData) {
+            alert('Fehler: Kein Charakter zum Speichern ausgewählt. Bitte erstelle zuerst einen Charakter.');
+            return;
+        }
+
         const saveData = {
             name: saveName,
             character: charData,
@@ -414,8 +421,10 @@ function setupGameScreen() {
 
     if (!charData) {
         charCardContainer.innerHTML = '<p>Kein Charakter ausgewählt. Bitte erstelle einen Charakter.</p>';
+        ui.savePartyBtn.disabled = true; // Disable save if no character
         return;
     }
+    ui.savePartyBtn.disabled = false; // Enable save if character exists
 
     charCardContainer.innerHTML = `
         <div class="character-card-game">
@@ -459,6 +468,10 @@ function setupNpcSelection() {
                 <select class="npc-class-select" data-slot="${i}">
                     ${options}
                 </select>
+                <div class="gender-selector">
+                    <button class="gender-btn active" data-gender="male"><img src="/images/RPG/Charakter/M.png" alt="Männlich"></button>
+                    <button class="gender-btn" data-gender="female"><img src="/images/RPG/Charakter/F.png" alt="Weiblich"></button>
+                </div>
             </div>
         `;
         npcContainer.appendChild(card);
@@ -468,34 +481,42 @@ function setupNpcSelection() {
         }
     }
 
-    const npcSelects = document.querySelectorAll('.npc-class-select');
-    npcSelects.forEach(select => {
-        select.addEventListener('change', (event) => {
-            const selectedClass = event.target.value;
-            const slot = parseInt(event.target.dataset.slot, 10);
-            const card = event.target.closest('.npc-card');
-            const img = card.querySelector('img');
+    document.querySelectorAll('.npc-card').forEach((card, i) => {
+        const select = card.querySelector('.npc-class-select');
+        const img = card.querySelector('img');
+        const genderButtons = card.querySelectorAll('.gender-btn');
+
+        const updateNpc = () => {
+            const selectedClass = select.value;
+            const activeGenderBtn = card.querySelector('.gender-btn.active');
+            const gender = activeGenderBtn ? activeGenderBtn.dataset.gender : 'male';
 
             if (selectedClass && RPG_CLASSES[selectedClass]) {
-                const gender = 'male'; // Assuming male for NPCs for now
                 const classData = RPG_CLASSES[selectedClass];
                 img.src = classData.img[gender];
 
-                npcParty[slot] = {
-                    name: selectedClass, // Or maybe a generated name later
+                npcParty[i] = {
+                    name: selectedClass,
                     class: selectedClass,
                     image: classData.img[gender],
                     stats: classData.stats,
-                    hp: 100, // Default values
-                    maxHp: 100,
-                    mana: 100,
-                    maxMana: 100,
+                    hp: 100, maxHp: 100, mana: 100, maxMana: 100,
                     gender: gender
                 };
             } else {
                 img.src = '/images/RPG/Charakter/male_silhouette.svg';
-                npcParty[slot] = null; // Clear selection
+                npcParty[i] = null;
             }
+        };
+
+        select.addEventListener('change', updateNpc);
+
+        genderButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                card.querySelector('.gender-btn.active').classList.remove('active');
+                button.classList.add('active');
+                updateNpc();
+            });
         });
     });
 }

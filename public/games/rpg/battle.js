@@ -111,7 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function createCharacterCard(characterData) {
         if (!characterData) return null;
 
-        // Mock data for display purposes, assuming it might be missing
         const hp = characterData.hp ?? Math.floor(Math.random() * 80) + 20;
         const maxHp = characterData.maxHp ?? 100;
         const mana = characterData.mana ?? Math.floor(Math.random() * 60) + 40;
@@ -120,21 +119,45 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = document.createElement('div');
         card.className = 'char-card';
 
-        const mainPart = document.createElement('div');
-        mainPart.className = 'char-main';
-
+        // Name
         const name = characterData.name || 'Unknown';
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'char-card-info';
+        const nameHeader = document.createElement('h3');
+        nameHeader.textContent = name;
+        infoDiv.appendChild(nameHeader);
+
+        // Top Section (Image + Drop Zone)
+        const topSection = document.createElement('div');
+        topSection.className = 'char-top-section';
+
         const imageSrc = characterData.image || '/images/RPG/Charakter/male_silhouette.svg';
         const img = document.createElement('img');
         img.src = imageSrc;
         img.alt = name;
 
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'char-card-info';
+        const dropZone = document.createElement('div');
+        dropZone.className = 'char-drop-zone';
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const itemId = e.dataTransfer.getData('text/plain');
+            const itemElement = document.getElementById(itemId);
+            if (itemElement && dropZone.childElementCount === 0) {
+                playSound('/Sounds/RPG/Drag_rev.mp3');
+                dropZone.appendChild(itemElement);
+            }
+        });
 
-        const nameHeader = document.createElement('h3');
-        nameHeader.textContent = name;
+        topSection.appendChild(img);
+        topSection.appendChild(dropZone);
 
+        // Stats Container (Health + Mana bars)
         const statsContainer = document.createElement('div');
         statsContainer.className = 'char-stats-container';
 
@@ -170,33 +193,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         statsContainer.appendChild(healthBarContainer);
         statsContainer.appendChild(manaBarContainer);
-        infoDiv.appendChild(nameHeader);
-        infoDiv.appendChild(statsContainer);
-        mainPart.appendChild(img);
-        mainPart.appendChild(infoDiv);
 
-        const dropZone = document.createElement('div');
-        dropZone.className = 'char-drop-zone';
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('drag-over');
-        });
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('drag-over');
-        });
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('drag-over');
-            const itemId = e.dataTransfer.getData('text/plain');
-            const itemElement = document.getElementById(itemId);
-            if (itemElement && dropZone.childElementCount === 0) {
-                playSound('/Sounds/RPG/Drag_rev.mp3');
-                dropZone.appendChild(itemElement);
-            }
-        });
+        // Assemble the card
+        card.appendChild(infoDiv);
+        card.appendChild(topSection);
+        card.appendChild(statsContainer);
 
-        card.appendChild(mainPart);
-        card.appendChild(dropZone);
         return card;
     }
 

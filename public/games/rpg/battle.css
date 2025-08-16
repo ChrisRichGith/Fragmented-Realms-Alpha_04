@@ -108,14 +108,14 @@ body, html {
     font-family: 'Cinzel', serif; /* Assuming this font is used, might need to import */
 }
 
-#player-character-card, #npc-character-cards, #tactic-items {
-    margin-top: 20px;
+#player-character-card, #npc-character-cards {
     width: 100%;
 }
 
 #player-character-card {
     display: flex;
     justify-content: center;
+    margin-top: 20px;
 }
 
 #npc-character-cards {
@@ -123,26 +123,26 @@ body, html {
     flex-direction: column;
     gap: 10px;
     align-items: center;
+    margin-top: 20px;
 }
 
 .char-card {
     display: flex;
-    flex-direction: column; /* Stack main content and drop zone vertically */
-    gap: 10px;
+    flex-direction: column;
+    gap: 5px;
     border: 2px solid #8a6d4f;
     background: rgba(40, 30, 30, 0.85);
     padding: 10px;
     margin-bottom: 10px;
-    width: 95%;
     box-sizing: border-box;
-    align-items: center; /* Center content horizontally */
+    align-items: center;
 }
 
-.char-main {
+.char-top-section {
     display: flex;
+    gap: 10px;
     align-items: center;
-    gap: 15px;
-    width: 100%;
+    justify-content: center;
 }
 
 .char-card img {
@@ -155,21 +155,21 @@ body, html {
 }
 
 .char-card-info {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px; /* Space between name and stat bars */
+    width: 100%;
 }
 
 .char-card h3 {
-    margin: 0;
+    margin: 0 0 8px 0;
     font-size: 1.2em;
+    text-align: center;
 }
 
 .char-stats-container {
     display: flex;
     flex-direction: column;
     gap: 5px;
+    width: 100%;
+    margin-top: 5px;
 }
 
 .stat-bar-container {
@@ -209,8 +209,8 @@ body, html {
 }
 
 .char-drop-zone {
-    width: 130px;
-    height: 130px;
+    width: 75px;
+    height: 75px;
     border: 2px dashed rgba(255, 255, 255, 0.4);
     background-color: rgba(0, 0, 0, 0.3);
     display: flex;
@@ -218,8 +218,7 @@ body, html {
     justify-content: center;
     flex-shrink: 0;
     transition: background-color 0.3s, border-color 0.3s;
-    margin-top: 10px; /* Add space above the drop zone */
-    box-sizing: border-box; /* This is the fix */
+    box-sizing: border-box;
 }
 
 .char-drop-zone.drag-over {
@@ -230,15 +229,16 @@ body, html {
 .char-drop-zone .tactic-item {
     width: 100%;
     height: 100%;
-    padding: 5px; /* Add some padding for the contained item */
+    padding: 2px;
     box-sizing: border-box;
 }
 
 .char-drop-zone .tactic-item img {
     width: 100%;
     height: 100%;
-    border: none; /* Remove border from item image inside drop zone */
+    border: none;
     cursor: default;
+    border-radius: 5px;
 }
 
 #tactic-items-container {
@@ -264,8 +264,8 @@ body, html {
 }
 
 .tactic-item img {
-    width: 120px;
-    height: 120px;
+    width: 70px;
+    height: 70px;
     border: 2px solid #c9b037;
     border-radius: 10px;
     cursor: grab;

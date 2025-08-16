@@ -318,6 +318,13 @@ function setupEventListeners() {
         }
 
         const charData = JSON.parse(localStorage.getItem('selectedCharacter'));
+
+        // Robustness check: Ensure character data exists before saving.
+        if (!charData) {
+            alert('Fehler: Kein Charakter zum Speichern ausgewählt. Bitte erstelle zuerst einen Charakter.');
+            return;
+        }
+
         const saveData = {
             name: saveName,
             character: charData,

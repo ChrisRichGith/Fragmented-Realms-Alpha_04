@@ -81,7 +81,7 @@ const RPG_CLASSES = {
         img: { male: '/images/RPG/Charakter/arkaner_m.png', female: '/images/RPG/Charakter/arkaner_w.png' },
         abilities: {
             "Synergie": { name: "Synergie", type: "Angriff", target: "Passiv", effect: "Chance auf zusätzlichen Schaden nach Aktionen von Verbündeten" },
-            "Harmonie": { name: "Harmonie", type:. "Unterstützung", target: "Gruppe", cost: 30, cooldown: 3, duration: 3, effect: "+10% auf alle Basisattribute" },
+            "Harmonie": { name: "Harmonie", type: "Unterstützung", target: "Gruppe", cost: 30, cooldown: 3, duration: 3, effect: "+10% auf alle Basisattribute" },
             "Rhythmus der Regeneration": { name: "Rhythmus der Regeneration", type: "Unterstützung", target: "Gruppe", cost: 35, cooldown: 4, duration: 3, value: "15 + 40% INT pro Runde" },
             "Klangschild": { name: "Klangschild", type: "Kontrolle", target: "Gruppe", cost: 40, cooldown: 5, effect: "Absorbiert 80 magischen Schaden" },
             "Stillezone": { name: "Stillezone", type: "Kontrolle", target: "AoE", cost: 45, cooldown: 5, duration: 2, effect: "Verhindert Zauberwirken" },

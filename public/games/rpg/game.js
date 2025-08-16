@@ -201,7 +201,7 @@ function setupEventListeners() {
 // --- New Character Creation Logic ---
 
 function initCharacterCreationScreen() {
-    if (!ui.creationScreen) return;
+    if (!ui.creationScreen) return; // Guard clause to prevent errors on other screens
 
     // Populate class dropdown
     ui.classSelect.innerHTML = '<option value="">- Klasse wählen -</option>';
